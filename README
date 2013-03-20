@@ -90,6 +90,9 @@ Jak nazywać commity? Jak patrzyłem u Konrada, w programie macie dwa pola - w m
 zwięzły tytuł, w dużym dokładniejszy opis, żeby nikt nie musiał robić dokładnej analizy tego, co
 zrobiliście.
 
+Jak się walniecie - dodacie jeden plik za mało, lub źle wpiszecie nazwę, ostatniego commita można
+poprawić. Ale to musicie sobie sprawdzić, jak to się robi w programie na windowsa.
+
 Synchronizacja
 ----------------------
 Generalnie nie musisz synchronizować repozytorium po każdym commicie - najlepiej synchronizować np. jak

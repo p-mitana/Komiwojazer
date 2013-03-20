@@ -1,0 +1,106 @@
+Jeżeli nie jesteś członkiem naszego teamu, sprawdź plik LICENSE, tu nie ma nic ważnego dla Ciebie :)
+
+If you're not a member of our team, please check the LICENSE file, here is nothing important for you :)
+=======================================================================================================
+
+No to macie tutoriala do GIT-a. Mam nadzieję, że pomoże Wam ogarnąć to jako tako i uda nam się jakoś
+sensownie tego commita wykorzystać. Oprócz tego polecam zajrzeć na zakładki Issues i Milestones - to
+może pomóc nam zorganizować pracę i mieć łatwy dostęp do informacji, kto nad czym pracuje i jakie mamy
+plany na kolejne etapy tworzenia projektu.
+
+Wstęp
+----------------------
+Jeśli chodzi o instalację, to włazicie sobie tutaj: http://windows.github.com/ - ściągacie i
+instalujecie. Z tego co patrzyłem, program jest bardzo prosty w obsłudze i wszystko widać. Mimo
+wszystko polecam przeczytać ten plik, żeby ogarnąć, po co te wszystkie dziwne rzeczy i móc w pełni je
+wykorzystać.
+
+Potem, gdy już dodam Was do repozytorium, musicie je sklonować - znajdźcie sobie w programie
+odpowiednią opcję i tyle.
+O co chodzi z tym repozytorium?
+No to jest takie coś, co pozwoli nam wszystkim pracować jednocześnie nad projektem, każdy na własą rękę
+i potem na bieżąco łączyć to wszystko w całość.
+
+Gałęzie
+----------------------
+Repoztorium zawiera tzw. gałęzie (branches). Pozwalają one rozwijać kod w kilku kierunkach jednocześnie.
+Brzmi to dziwnie, ale generalnie przydaje się, jak chcecie wprowadzić jakieś eksperymentalne zmiany,
+jednocześnie nie wprowadzając ich do głównej linii programu. W ten sposób jedna osoba może sprawdzić
+jakąś opcję, a reszta pracuje nad projektem tak, jakby tamta nic nie kombinowała. Gdy tamta funkcja
+działa jak trzeba, eksperymentalna gałąś jest łączona (merge) z główną. Cała akcja wygląda tak:
+
+- Tworzysz nową gałąź
+  W tym momencie następuje jakby rozwidlenie projektu na dwa, które rozwijają się równolegle.
+  Ty pracujesz nad swoim, dodając to, co chcesz sprawdzić, reszta nie przejmuje się tym i robi swoje.
+  
+- Przełączasz się na swoją gałąź
+  Nie da się pracować na kilku gałęziach jednocześnie. Przełączasz się na swoją, dopisujesz swoje super
+  funkcje i testujesz je. Jeżeli chcesz w międzyczasie zmienić coś innego w kodzie, co musi być od razu
+  dostępne dla wszystkich, przełącz się na gałąź główną, wprowadź zmiany, zsynchronizuj kod i wróć na
+  swoją gałąź, żeby dalej rozwijać to, co chcesz sprawdzić, zanim wrzucisz do głównej gałęzi.
+  
+- Piszesz swoje, testujesz i pokazujesz innym
+  
+- Włączasz swoją gałąź do głównej
+  Ta operacja połączy zmiany wprowadzone w obu gałęziach. Dzięki temu w głównej gałęzi będzie zarówno
+  Twój bajer, jak i zmiany, które w międzyczasie reszta wprowadziła do głównego programu.
+
+Każde repozytorium zawiera gałąź master, czyli gałąź główną. Tu generalnie powinno wrzucać się tylko
+działające rzeczy tak, żeby zawsze dało się skompilować i uruchomić - to jest taki aktualny stan całego
+projeku. Warto też pamiętać o tym, że chyba nie da się przenieść tylko niektórych commitów na inną
+gałąź - generalnie dołącza się gałąź w całości.
+
+UWAGA: Pamiętaj, żeby w nowej gałęzi nie dokonywać zmian, które łamią kompatybilność z obecnym kodem.
+Chodz o to, żeby Twoje zmiany po dołączeniu do głównej gałęzi nie wymagały przerabiania tego,
+co w międzyczasie piszą inni! Dlatego ważna jest modułowa budowa projektu, żeby można było modyfikować
+jeden aspekt programu bez wpływu na inne.
+
+*******************************************************************************************************
+*   Teraz uwaga dotycząca stricte naszego projektu.                                                   *
+*                                                                                                     *
+*   Na razie proponuję się niczym nie przejmować i pracować na gałęzi master. Jak dojdziemy do        *
+*   etapu,                                                                                            *
+*   na którym coś działa, pewnie warto będzie zrobić drugą gąłąź testową i działać w ten sposób:      *
+*   - Tworzymy kod odpowiedzialny za daną rzecz lokalnie                                              *
+*   - Wrzucamy do gałęzi testowej (lub tych, w których eksperymentujemy na własną rękę)               *
+*   - Nasze gałęzie włączamy zawsze do gałęzi testowej, a co jakiś czas, np. po osiągnięciu           *
+*     pewnego etapu w projekcie dołączamy testing do mastera i znów pracujemy na testing, po czym     *
+*     na kolejnym etapie znów dołączamy do mastera i tak w kółko. Dzięki temu mamy punkt stabilny,    *
+*     do którego zawsze można bezpiecznie się cofnąć.                                                 *
+*                                                                                                     *
+*   Ale to jezscze będziemy mogli spokojnie dogadać później :)                                        *
+*                                                                                                     *
+*******************************************************************************************************
+
+Commity
+----------------------
+Commit to zestaw zmian, które dokonujesz w kodzie. Krótko mówiąc - dopisujesz jakiś element do programu
+i robisz commita. Do każdego dołączasz wiadomość, w której jednym zdaniem piszesz, co zrobiłeś. Commity
+nie synchronizują się od razu i nie wrzucaj całego tygodnia pracy do jednego commita. Niech commit odnosi
+się do konkretnie zrobionej rzeczy, np. commit typu "dodałem możliwość X do programu" lub "poprawiłem
+błąd wywalania się programu w takiej sytuacji". Jeżeli danego dnia załatwisz dwie sprawy, robisz dwa
+commity. Świeżo zrobiony commit nie zapisuje się od razu na serwerze, tylko na Twoim lokalnym gicie.
+
+Powinna być w interfejsie opcja wybrania, które pliki mają być wrzucone do commita - jeżeli załatwiłeś
+jedną sprawę w pliku X i ruszyłeś inną w pliku Y, ale nie skończyłeś jej, załączasz do commita tylko plik
+X. Najlepiej robić commita po każdej w pełni załatwionej sprawie. Chyba, że daną sprawę robi kilka osób,
+to wrzucasz swoją część, lub zrobione tyle, ile potrafisz zrobić. Oczywiście ze stosowną notką.
+
+Jak nazywać commity? Jak patrzyłem u Konrada, w programie macie dwa pola - w małym piszecie krótki i
+zwięzły tytuł, w dużym dokładniejszy opis, żeby nikt nie musiał robić dokładnej analizy tego, co
+zrobiliście.
+
+Synchronizacja
+----------------------
+Generalnie nie musisz synchronizować repozytorium po każdym commicie - najlepiej synchronizować np. jak
+kończysz pracę na razie i odchodzisz od kompa. Jeżeli zrobiłeś jednego commita, zacząłeś coś robić, ale
+zamierzasz dokończyć to jutro, nie rób drugiego commita i zsynchronizuj. Pierwszy commit się wrzuci,
+drugi nie - więc w repozytorium pliki będą wyglądały tak, jakbyś zrobił pierwszą rzecz, a nie ruszył
+drugiej.
+Pamiętaj, że synchronizacja modyfikuje Twoje pliki, wrzucając do nich zmiany zrobione przez innych - 
+właśnie dla tego nie synchronizuj w trakcie pracy nad czymś, bo będziesz musiał zamknąć plik, otworzyć
+go, znaleźć się w nim i sprawdzić, czy ktoś Ci czegoś nie zmienił ;)
+
+----------------------
+Na razie to chyba tyle. Jak coś jeszcze będę miał do powiedzenia w kwestii obsługi GIT-a, będę
+aktualizował ten plik.

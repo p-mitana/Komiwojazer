@@ -1,7 +1,0 @@
-Konrad, jak skończysz, możesz wrzucić tu dane :)
-Proponuję w formacie:
-
-miasto1	x	y
-miasto2	x	y
-
-Czyli rozdzielamy poszczególne pola tabulacją, a poszczególne rekordy łamaniem wiersza.

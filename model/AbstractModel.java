@@ -11,6 +11,11 @@ import java.util.*;
  */
 public abstract class AbstractModel
 {
+	//  ========================= POLA KLASY ========================
+	
+	/** Słuchacz postępu */
+	public ModelProgressListener listener;
+	
 	//  ========================= METODY KLASY =========================
 	
 	// ------ Przygotowanie środowiska do symulacji ------
@@ -19,7 +24,7 @@ public abstract class AbstractModel
 	 * Przygotowuje środowisko do symulacji. Wszystkie dane muszą być
 	 * ustawione przed wywołaniem tej metody.
 	 */
-	public abstract void initialize();
+	public abstract void initialize() throws ModelException;
 	
 	// ------ Parametry środowiska ------
 	
@@ -51,21 +56,23 @@ public abstract class AbstractModel
 	 * 
 	 * @param index	Indeks rodzica na liście
 	 */
-	public abstract void removeParentAt(int index) throws ModelException, ArrayIndexOutOfBoundsException;
+	public abstract void removeParentAt(int index) throws ArrayIndexOutOfBoundsException;
 	
 	/**
 	 * Zwraca rodzica na określonym miejscu na liście
 	 * 
 	 * @param index	Indeks rodzica na liście
+	 * 
+	 * @return	Rodzic
 	 */
-	public abstract void getParentAt(int index) throws ArrayIndexOutOfBoundsException;
+	public abstract int[] getParentAt(int index) throws ArrayIndexOutOfBoundsException;
 	
 	/**
 	 * Ustawia limit ilości rodziców
 	 * 
 	 * @param parentLimit	Limit rodziców
 	 */
-	public abstract void setParentLimit(int parentLimit) throws ModelException;
+	public abstract void setParentLimit(int parentLimit);
 	
 	/**
 	 * Zwraca limit ilości rodziców
@@ -79,7 +86,7 @@ public abstract class AbstractModel
 	 * 
 	 * @param childLimit	Limit dzieci
 	 */
-	public abstract void setChildLimit(int childLimit) throws ModelException;
+	public abstract void setChildLimit(int childLimit);
 	
 	/**
 	 * Zwraca limit ilości dzieci
@@ -93,14 +100,14 @@ public abstract class AbstractModel
 	 * 
 	 * @param mutationFactor	Prawdopodobieństwo mutacji
 	 */
-	public abstract void setMutationFactor(double mutationFactor) throws ModelException;
+	public abstract void setMutationFactor(double mutationFactor);
 	
 	/**
 	 * Zwraca prawdopodobieństwo mutacji
 	 * 
 	 * @return	Prawdopodobieństwo mutacji
 	 */
-	public abstract int getMutationFactor();
+	public abstract double getMutationFactor();
 	
 	// ------ Parametry symulacji ------
 	
@@ -125,7 +132,7 @@ public abstract class AbstractModel
 	 * 
 	 * @param generations	Liczba pokoleń
 	 */
-	public abstract void simulate(int generations) throws ModelException;
+	public abstract void simulate(int generations);
 	
 	// ------ Wyniki symulacji ------
 	
@@ -144,5 +151,16 @@ public abstract class AbstractModel
 	 */
 	public abstract int[][] getCurrentChildren();
 	
+	// ------ Postęp symulacji ------
+	
+	/**
+	 * Ustawia słuchacza postępu
+	 *
+	 * @param listener	Słuchacz
+	 */
+	public void setModelProgessListener(ModelProgressListener listener)
+	{
+		this.listener = listener;
+	}
 }
 

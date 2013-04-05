@@ -12,7 +12,7 @@ public class ModelException extends Exception
 	//  ========================= POLA KLASY =========================
 	
 	/** Graf, który rzuci ten wyjątek */
-	String message;
+	protected String message;
 	
 	//  ========================= KONSTRUKTORY =========================
 	

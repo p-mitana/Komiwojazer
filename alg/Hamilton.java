@@ -73,7 +73,34 @@ public class Hamilton
 	}
 	
 	/**
-	 * Tworzy genotyp z podaną tablicą chromosomów.
+	 * Tworzy genotyp na podstawie fenotypu
+	 * 
+	 * @param indicies	Indeksy kolejnych wierzchołków
+	 */
+	public Hamilton(int[] indicies) throws TooLowCountException
+	{
+		if(indicies.length < 3)
+		{
+			throw new TooLowCountException(indicies.length);
+		}
+		
+		chromosomes = new Chromosome[indicies.length];
+		
+		for(int i = 0; i < indicies.length; i++)
+		{
+			/*
+			 * Triczek. Jak przekroczy tablicę, wraca do początku
+			 */
+			int iplus1 = (i+1) % indicies.length;
+			int iplus2 = (i+2) % indicies.length;
+			
+			Chromosome chromos = new Chromosome(indicies[i], indicies[iplus1], indicies[iplus2]);
+			chromosomes[i] = chromos;
+		}
+	}
+	
+	/**
+	 * Tworzy genotyp z podaną tablicą chromosomów
 	 * 
 	 * @param chromosomes	Tablica chromosomów
 	 */

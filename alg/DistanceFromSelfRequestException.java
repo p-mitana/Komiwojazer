@@ -1,5 +1,7 @@
 package alg;
 
+import model.*;
+
 /**
  * Wyjątek wyrzucany przez klasę FullGraph przy zapytaniu o odległość
  * wierzchołka od siebie samego. Można by zwrócić zero, ale ponieważ
@@ -8,7 +10,7 @@ package alg;
  * 
  * @see FullGraph
  */
-public class DistanceFromSelfRequestException extends Exception
+public class DistanceFromSelfRequestException extends ModelException
 {
 	//  ========================= POLA KLASY =========================
 	
@@ -27,6 +29,8 @@ public class DistanceFromSelfRequestException extends Exception
 	 */
 	public DistanceFromSelfRequestException(FullGraph graph, int index)
 	{
+		super(String.format("Błędne żądanie odległości punktu %d od siebie!", index));
+		
 		this.graph = graph;
 		this.index = index;
 	}

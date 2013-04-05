@@ -1,18 +1,15 @@
 package alg;
 
+import model.*;
+
 /**
  * Wyjątek wyrzucany przez klasę Ecosystem w przypadku np. błędnych
  * parametrów ekosystemu.
  * 
  * @see FullGraph
  */
-public class EcosystemException extends Exception
+public class EcosystemException extends ModelException
 {
-	//  ========================= POLA KLASY =========================
-	
-	/** Wiadomość */
-	String message;
-	
 	//  ========================= KONSTRUKTORY =========================
 	
 	/** Konstruktor wyjątku
@@ -21,16 +18,8 @@ public class EcosystemException extends Exception
 	 */
 	public EcosystemException(String msg)
 	{
+		super(msg);
+		
 		this.message = msg;
-	}
-	
-	//  ========================= METODY KLASY =========================
-	
-	/**
-	 * Zwraca reprezentację tekstową wyjątku
-	 */
-	public String toString()
-	{
-		return message;
 	}
 }

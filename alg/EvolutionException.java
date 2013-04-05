@@ -1,18 +1,15 @@
 package alg;
 
+import model.*;
+
 /**
  * Wyjątek wyrzucany przez Hamilton, gdy próbujemy stworzyć
  * mniej niż trzyelementowy cykl.
  * 
  * @see FullGraph
  */
-public class EvolutionException extends Exception
+public class EvolutionException extends ModelException
 {
-	//  ========================= POLA KLASY =========================
-	
-	/** Wiadomość o błędzie */
-	String message;
-	
 	//  ========================= KONSTRUKTORY KLASY =========================
 	
 	/**
@@ -22,16 +19,7 @@ public class EvolutionException extends Exception
 	 */
 	public EvolutionException(String message)
 	{
+		super(message);
 		this.message = message;
-	}
-	
-	//  ========================= METODY KLASY =========================
-	
-	/**
-	 * Zwraca reprezentację tekstową wyjątku
-	 */
-	public String toString()
-	{
-		return "Błąd ewolucji: " + message;
 	}
 }

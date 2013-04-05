@@ -1,12 +1,14 @@
 package alg;
 
+import model.*;
+
 /**
  * Wyjątek wyrzucany przez Hamilton, gdy próbujemy stworzyć
  * mniej niż trzyelementowy cykl.
  * 
  * @see FullGraph
  */
-public class TooLowCountException extends Exception
+public class TooLowCountException extends ModelException
 {
 	//  ========================= POLA KLASY =========================
 	
@@ -21,6 +23,8 @@ public class TooLowCountException extends Exception
 	 */
 	public TooLowCountException(int count)
 	{
+		super(String.format("Za którtki cykl Hamiltona: %d!", count));
+		
 		this.count = count;
 	}
 	

@@ -13,6 +13,14 @@ public abstract class AbstractModel
 {
 	//  ========================= METODY KLASY =========================
 	
+	// ------ Przygotowanie środowiska do symulacji ------
+	
+	/**
+	 * Przygotowuje środowisko do symulacji. Wszystkie dane muszą być
+	 * ustawione przed wywołaniem tej metody.
+	 */
+	public abstract void initialize();
+	
 	// ------ Parametry środowiska ------
 	
 	/**

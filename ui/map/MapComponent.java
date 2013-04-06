@@ -12,12 +12,12 @@ import javax.swing.*;
  * Komponent ma wbudowane elementy do powiększania/pomniejszania, oraz
  * legendę i przycisk do jej wyłączenia. Obsługuje przesuwanie myszą.
  */
-class MapComponent extends JComponent implements MouseMotionListener, MouseListener, ActionListener
+public class MapComponent extends JComponent implements MouseMotionListener, MouseListener, ActionListener
 {
 	//  ========================= POLA KLASY ========================
 	
 	/** Lista warstw */
-	Vector<MapLayer> layers;
+	public Vector<MapLayer> layers;
 	
 	/** Kolor tła */
 	private Color backgroundColor;
@@ -42,6 +42,9 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 	
 	/** Ilość jednostek na piksel - skala powiększenia */
 	private float unitsPerPixel;
+	
+	/** Minimalny zoom, przy którym pojawia się tekst */
+	private float minimalZoomForText;
 	
 	/** Wielkość oczka siatki w jednostkach mapy */
 	private float gridSize;
@@ -69,7 +72,7 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 	/**
 	 * Konstruktor - tworzy pustą mapę.
 	 */
-	MapComponent()
+	public MapComponent()
 	{
 		layers = new Vector<MapLayer>();
 		
@@ -317,7 +320,7 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 					}
 					
 					// Tekst rysuj tylko przy dużym powiększeniu
-					if(unitsPerPixel <= 1.0 && layer.getTextVisible())
+					if(unitsPerPixel <= minimalZoomForText && layer.getTextVisible())
 					{
 						// Liczba linii
 						int lines = object.text.split("\r\n|\r|\n").length;
@@ -346,7 +349,7 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 						{
 							if(object.symbol != null)
 							{
-								centerHeight += object.symbol.getHeight(this)/2;  // Tekst będzie pod symbolem
+								centerHeight += object.symbol.getHeight(this)/2 + 5;  // Tekst będzie pod symbolem
 							}
 							else
 							{
@@ -380,16 +383,16 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 	 * 
 	 * @param g	Obiekt rysujący
 	 */
-	void paintLegend(Graphics g)
+	protected void paintLegend(Graphics g)
 	{
 		// Parametry czcionki
 		FontMetrics metrics = getFontMetrics(g.getFont());
 		
 		// Ilość wierszy (po dwie warstwy na wiersz)
-		int rows = layers.size() / 2;
+		int rows = (layers.size()+1) / 2;
 		
-		// Tak, to jest możliwe. To znaczy, że przy dzieleniu była reszta.
-		if(layers.size() / 2 == (layers.size()+1) / 2) 
+		// To znaczy, że przy dzieleniu była reszta.
+		if((layers.size()+1) / 2 < (layers.size()+2) / 2) 
 		{
 			rows++;  // Jeden wiersz więcej
 		}
@@ -744,7 +747,7 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 	 * 
 	 * @param zoom	Powiększenie w jednostkach na piksel
 	 */
-	void setUnitsPerPixel(float zoom)
+	public void setUnitsPerPixel(float zoom)
 	{
 		// Limity powiększenia
 		if(unitsPerPixel > 10000.0f || unitsPerPixel < 0.01f)
@@ -764,9 +767,37 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 	 * 
 	 * @return	Powiększenie w jednostkach na piksel
 	 */
-	float getUnitsPerPixel()
+	public float getUnitsPerPixel()
 	{
 		return unitsPerPixel;
+	}
+	
+	/**
+	 * Ustawia minimalne powiększenie, przy którym widać tekst
+	 * 
+	 * @param zoom	Powiększenie w jednostkach na piksel
+	 */
+	public void setMinimalZoomForText(float zoom)
+	{
+		boolean repaint = (zoom > unitsPerPixel && minimalZoomForText < unitsPerPixel) ||
+							(zoom < unitsPerPixel && minimalZoomForText > unitsPerPixel);
+		
+		minimalZoomForText = zoom;
+		
+		if(repaint)
+		{
+			repaint();
+		}
+	}
+	
+	/**
+	 * Zwraca minimalne powiększenie, przy którym widać tekst
+	 * 
+	 * @return	Powiększenie w jednostkach na piksel
+	 */
+	public float getMinimalZoomForText()
+	{
+		return minimalZoomForText;
 	}
 	
 	/**
@@ -774,7 +805,7 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 	 * 
 	 * @param size	Rozmiar w jednostkach na mapie
 	 */
-	void setGridSize(float size)
+	public void setGridSize(float size)
 	{
 		gridSize = size;
 		repaint();
@@ -785,7 +816,7 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 	 * 
 	 * @return	Rozmiar w jednostkach na mapie
 	 */
-	float getGridSize()
+	public float getGridSize()
 	{
 		return gridSize;
 	}
@@ -795,7 +826,7 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 	 * 
 	 * @param l	Etykieta
 	 */
-	void setStatusLabel(JLabel l)
+	public void setStatusLabel(JLabel l)
 	{
 		statusLabel = l;
 	}
@@ -805,7 +836,7 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 	 * 
 	 * @return	Etykieta
 	 */
-	JLabel getStatusLabel()
+	public JLabel getStatusLabel()
 	{
 		return statusLabel;
 	}
@@ -815,7 +846,7 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 	 * 
 	 * @param b	Flaga
 	 */
-	void setRepaintLocked(boolean b)
+	public void setRepaintLocked(boolean b)
 	{
 		repaintLocked = b;
 	}
@@ -825,7 +856,7 @@ class MapComponent extends JComponent implements MouseMotionListener, MouseListe
 	 * 
 	 * @return	Flaga
 	 */
-	boolean getRepaintLocked()
+	public boolean getRepaintLocked()
 	{
 		return repaintLocked;
 	}

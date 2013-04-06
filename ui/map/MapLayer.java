@@ -9,7 +9,7 @@ import java.util.*;
  * Warstwa przechowuje obiekty oraz informacje o ich wyglądzie.
  * warswty można selektywnie pokazywać i ukrywać.
  */
-class MapLayer
+public class MapLayer
 {
 	//  ========================= POLA KLASY ========================
 	
@@ -44,7 +44,7 @@ class MapLayer
 	private float spotRadius;
 	
 	/** Wektor obiektów na tej warstwie */
-	Vector<MapObject> objects;
+	public Vector<MapObject> objects;
 	
 	//  ========================= KONSTRUKTORY KLASY ========================
 	
@@ -60,7 +60,7 @@ class MapLayer
 	 * 
 	 * @param name	Nazwa warstwy
 	 */
-	MapLayer(String name)
+	public MapLayer(String name)
 	{
 		this.name = name;
 		textVisible = false;
@@ -87,7 +87,7 @@ class MapLayer
 	 * 
 	 * @return	Wysokość
 	 */
-	float heightOf(FPoint fp)
+	public float heightOf(FPoint fp)
 	{
 		for(int i = 0; i < objects.size(); i++)
 		{
@@ -105,7 +105,7 @@ class MapLayer
 	 * 
 	 * @param b	Czy warstwa ma być wyświetlana
 	 */
-	void setEnabled(boolean b)
+	public void setEnabled(boolean b)
 	{
 		enabled = b;
 	}
@@ -115,7 +115,7 @@ class MapLayer
 	 * 
 	 * @return	Czy warstwa jest wyświetlana
 	 */
-	boolean getEnabled()
+	public boolean getEnabled()
 	{
 		return enabled;
 	}
@@ -135,7 +135,7 @@ class MapLayer
 	 * 
 	 * @return	Czy warstwa jest bez obramowania
 	 */
-	boolean getBorderless()
+	public boolean getBorderless()
 	{
 		return borderless;
 	}
@@ -145,7 +145,7 @@ class MapLayer
 	 * 
 	 * @param name	Nazwa
 	 */
-	void setName(String name)
+	public void setName(String name)
 	{
 		this.name = name;
 	}
@@ -155,7 +155,7 @@ class MapLayer
 	 * 
 	 * @return	Nazwa
 	 */
-	String getName()
+	public String getName()
 	{
 		return name;
 	}
@@ -165,7 +165,7 @@ class MapLayer
 	 * 
 	 * @param r	Promień
 	 */
-	void setSpotRadius(float r)
+	public void setSpotRadius(float r)
 	{
 		spotRadius = r;
 	}
@@ -175,7 +175,7 @@ class MapLayer
 	 * 
 	 * @return	Promień
 	 */
-	float getSpotRadius()
+	public float getSpotRadius()
 	{
 		return spotRadius;
 	}
@@ -185,7 +185,7 @@ class MapLayer
 	 * 
 	 * @param h	Wysokość początkowa
 	 */
-	void setHeightMinimum(float h)
+	public void setHeightMinimum(float h)
 	{
 		heightMinimum = h;
 	}
@@ -195,7 +195,7 @@ class MapLayer
 	 * 
 	 * @return	Wysokość początkowa
 	 */
-	float getHeightMinimum()
+	public float getHeightMinimum()
 	{
 		return heightMinimum;
 	}
@@ -205,7 +205,7 @@ class MapLayer
 	 * 
 	 * @param h	Wysokość
 	 */
-	void setHeightInterval(float h)
+	public void setHeightInterval(float h)
 	{
 		heightInterval = h;
 	}
@@ -215,7 +215,7 @@ class MapLayer
 	 * 
 	 * @return	Wysokość
 	 */
-	float getHeightInterval()
+	public float getHeightInterval()
 	{
 		return heightInterval;
 	}
@@ -225,7 +225,7 @@ class MapLayer
 	 * 
 	 * @param color	Kolor
 	 */
-	void setDrawColor(Color color)
+	public void setDrawColor(Color color)
 	{
 		if(color == null)
 		{
@@ -242,7 +242,7 @@ class MapLayer
 	 * 
 	 * @return	Kolor
 	 */
-	Color getDrawColor()
+	public Color getDrawColor()
 	{
 		return drawColor;
 	}
@@ -252,7 +252,7 @@ class MapLayer
 	 * 
 	 * @param color	Kolor
 	 */
-	void setTextColor(Color color)
+	public void setTextColor(Color color)
 	{
 		if(color == null)
 		{
@@ -269,7 +269,7 @@ class MapLayer
 	 * 
 	 * @return	Kolor
 	 */
-	Color getTextColor()
+	public Color getTextColor()
 	{
 		return textColor;
 	}
@@ -279,7 +279,7 @@ class MapLayer
 	 * 
 	 * @param colors	Kolory
 	 */
-	void setFillColors(Vector<Color> colors)
+	public void setFillColors(Vector<Color> colors)
 	{
 		fillColors = colors;
 	}
@@ -289,7 +289,7 @@ class MapLayer
 	 * 
 	 * @return	Kolory
 	 */
-	Vector<Color> getFillColors()
+	public Vector<Color> getFillColors()
 	{
 		return fillColors;
 	}
@@ -299,7 +299,7 @@ class MapLayer
 	 * 
 	 * @param b	Widoczność tekstu
 	 */
-	void setTextVisible(boolean b)
+	public void setTextVisible(boolean b)
 	{
 		textVisible = b;
 	}
@@ -309,7 +309,7 @@ class MapLayer
 	 * 
 	 * @return	Widoczność tekstu
 	 */
-	boolean getTextVisible()
+	public boolean getTextVisible()
 	{
 		return textVisible;
 	}

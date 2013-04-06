@@ -3,7 +3,7 @@ package ui.map;
 /**
  * Klasa reprezentuje punkt na mapie.
  */
-class FPoint
+public class FPoint
 {
 	//  ========================= POLA KLASY ========================
 	
@@ -21,7 +21,7 @@ class FPoint
 	 * @param px	Współrzędna X
 	 * @param py	Współrzędna Y
 	 */
-	FPoint(float px, float py)
+	public FPoint(float px, float py)
 	{
 		x = px;
 		y = py;

@@ -10,28 +10,28 @@ import java.util.*;
  * mu symbol obrazkowy, lub zostawić bez niego - wtedy zostanie narysowane kółeczko
  * lub kropka, w zależności od przybliżenia mapy.
  */
-class MapObject
+public class MapObject
 {
 	//  ========================= POLA KLASY ========================
 	
 	/** Wierzchołki wielokąta. Dla obiektów punktowych wektor zawiera jeden element. */
-	Vector<FPoint> coords;
+	public Vector<FPoint> coords;
 	
 	/** Wysokość obiektu */
-	float height;
+	public float height;
 	
 	/** Etykieta obiektu */
-	String text;
+	public String text;
 	
 	/** Symbol obiektu */
-	Image symbol;
+	public Image symbol;
 	
 	//  ========================= KONSTRUKTORY KLASY ========================
 	
 	/**
 	 * Tworzy pusty obiekt bez współrzędnych.
 	 */
-	MapObject()
+	public MapObject()
 	{
 		text = "";
 		coords = new Vector<FPoint>();
@@ -45,7 +45,7 @@ class MapObject
 	 * Obiekt zawiera punkt, jeżeli przecina półprostą wychodzącą z tego punktu
 	 * nieparzystą liczbę razy.
 	 */
-	boolean contains(FPoint fp)
+	public boolean contains(FPoint fp)
 	{
 		if(coords.size() == 1)
 		{

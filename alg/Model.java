@@ -11,7 +11,7 @@ import java.util.*;
  * siebie niezależne - wymiana algorytmu nie wymusza modyfikacji interfejsu
  * i odwrotnie, o ile jedno i drugie zachowuje zgodność z modelem. 
  */
-public abstract class Model extends AbstractModel
+public class Model extends AbstractModel
 {
 	//  ========================= KLASY WEWNĘTRZNE =========================
 	

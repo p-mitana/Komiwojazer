@@ -111,7 +111,7 @@ public class Main extends JFrame
 		
 		map.setGridSize(10000);
 		map.setMinimalZoomForText(500);
-		map.setUnitsPerPixel(500);
+		map.setUnitsPerPixel(1000);
 		// Mapa
 		
 		// Okno
@@ -310,6 +310,58 @@ public class Main extends JFrame
 	}
 	
 	/**
+	 * Maluje cykl. Usuwa poprzendi, jeżeli był namalowany
+	 * 
+	 * @param cities	Tablica nazw miast
+	 */
+	public void paintCycle(String[] names)
+	{
+		cycleLayer.objects.clear();
+		
+		Vector<FPoint> coords = new Vector<FPoint>();
+		
+		for(String name : names)
+		{
+			coords.add(getCityPoint(name));
+		}
+		
+		MapObject obj = new MapObject();
+		obj.coords = coords;
+		cycleLayer.objects.add(obj);
+		
+		map.repaint();
+	}
+	
+	/**
+	 * Pobiera długość cyklu
+	 * 
+	 * @param cities	Tablica nazw miast
+	 * @return	Długość cyklu
+	 */
+	public float getCycleLength(String[] names)
+	{
+		float res = 0;
+		
+		Vector<FPoint> coords = new Vector<FPoint>();
+		
+		for(String name : names)
+		{
+			coords.add(getCityPoint(name));
+		}
+		
+		for(int i = 0; i < coords.size()-1; i++)
+		{
+			res += Math.sqrt(Math.pow(coords.get(i+1).x - coords.get(i).x, 2) +
+							Math.pow(coords.get(i+1).y - coords.get(i).y, 2));
+		}
+		
+		res += Math.sqrt(Math.pow(coords.get(coords.size()-1).x - coords.get(0).x, 2) +
+						Math.pow(coords.get(coords.size()-1).y - coords.get(0).y, 2));
+		
+		return res;
+	}
+	
+	/**
 	 * Metoda uruchamiająca program.
 	 * 
 	 * @param args	Argumenty wywołania
@@ -317,5 +369,94 @@ public class Main extends JFrame
 	public static void main(String[] args)
 	{
 		Main main = new Main();
+		
+		// TESTOWE OBLICZENIA
+		
+		// Tworzenie modelu
+		Model model = new Model();
+		
+		String[] array = {"Kraków", "Warszawa", "Lublin", "Gdańsk", "Płock", "Katowice",
+						"Krosno", "Elbląg", "Wrocław", "Poznań", "Zakopane", "Rzeszów",
+						"Szczecin", "Białystok", "Olsztyn", "Piła", "Grudziądz", "Radom",
+						"Opole", "Kielce", "Tarnów", "Łódź"};
+		
+		double[] x = new double[array.length];
+		double[] y = new double[array.length];
+		
+		for(int i = 0; i < array.length; i++)
+		{
+			main.selectCity(array[i], false);
+			FPoint point = main.getCityPoint(array[i]);
+			
+			x[i] = (double) point.x;
+			y[i] = (double) point.y;
+		}
+		
+		model.createPlanarGraph(x, y);
+		
+		// Losowanie rodziców
+		ArrayList<Integer> numberList = new ArrayList<Integer>();
+		for(int i = 0; i < array.length; i++)
+		{
+			numberList.add(new Integer(i));
+		}
+		
+		for(int i = 0; i < 100; i++)
+		{
+			Collections.shuffle(numberList);
+			int[] parent = new int[array.length];
+			
+			for(int j = 0; j < array.length; j++)
+			{
+				parent[j] = numberList.get(j);
+			}
+			
+			try
+			{
+				model.addParent(parent);
+			}
+			catch(Exception ex)
+			{
+				ex.printStackTrace();
+				System.exit(0);
+			}
+		}
+		
+		model.setParentLimit(100);
+		model.setChildLimit(200);
+		model.setMutationFactor(0.001);
+		
+		try
+		{
+			model.initialize();
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+			System.exit(0);
+		}
+		
+		model.simulate(10000);
+		
+		try
+		{
+			Thread.currentThread().sleep(1000);
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+			System.exit(0);
+		}
+		
+		int[] best = model.getCurrentBest();
+		String[] result = new String[best.length];
+		
+		for(int i = 0; i < best.length; i++)
+		{
+			result[i] = array[best[i]];
+		}
+		
+		main.paintCycle(result);
+		System.out.println(String.format("Długość cyklu: %.3f km", main.getCycleLength(result) / 1000.0));
 	}
 }

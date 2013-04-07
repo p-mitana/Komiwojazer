@@ -31,6 +31,9 @@ public class MapLayer
 	/** Kolor tekstu */
 	private Color textColor;
 	
+	/** Grubość linii */
+	private int lineWidth;
+	
 	/** Lista kolorów tła w zależności od wysokości */
 	private Vector<Color> fillColors;
 	
@@ -68,6 +71,7 @@ public class MapLayer
 		fillColors = new Vector<Color>();
 		fillColors.add(new Color(255, 255, 255));
 		textColor = new Color(0, 0, 0);
+		lineWidth = 1;
 		heightMinimum = 0;
 		heightInterval = 1;
 		enabled = true;
@@ -312,5 +316,28 @@ public class MapLayer
 	public boolean getTextVisible()
 	{
 		return textVisible;
+	}
+	
+	/**
+	 * Ustawia grubość linii
+	 * 
+	 * @param width	grubość linii
+	 */
+	public void setLineWidth(int width)
+	{
+		if(width > 0)
+		{
+			lineWidth = width;
+		}
+	}
+	
+	/**
+	 * Zwraca grubość linii
+	 * 
+	 * @return	Grubość linii
+	 */
+	public int getLineWidth()
+	{
+		return lineWidth;
 	}
 }

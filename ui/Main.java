@@ -37,8 +37,20 @@ public class Main extends JFrame
 	/** Warstwa z miastami */
 	MapLayer cityLayer;
 	
+	/** Warstwa z miastami zaznaczonymi */
+	MapLayer selectedCityLayer;
+	
+	/** Warstwa na cykle */
+	MapLayer cycleLayer;
+	
 	/** Lista nazw miast */
 	ArrayList<City> cities;
+	
+	/** Symbol zaznaczonego miasta */
+	Image selectedSymbol;
+	
+	/** Zaznaczone miasta */
+	ArrayList<City> selectedCities;
 	
 	//  ========================= KONSTRUKTORY KLASY ========================
 	
@@ -55,6 +67,13 @@ public class Main extends JFrame
 		}
 		catch(Exception ex){}
 		
+		selectedSymbol = null;
+		try
+		{
+			selectedSymbol = ImageIO.read(new File("data/selectedCity.png"));
+		}
+		catch(Exception ex){}
+		
 		// -------- Tworzenie interfejsu --------
 		
 		// Tworzenie układów
@@ -65,13 +84,30 @@ public class Main extends JFrame
 		JPanel rightPanel = new JPanel();
 		
 		// Konfiguracja komponentów
-		MapLayer cityLayer = new MapLayer("Miasta");
+		cycleLayer = new MapLayer("Cykle");
 		Vector<Color> colors = new Vector<Color>();
+		cycleLayer.setDrawColor(Color.RED);
+		colors.add(new Color(0, 0, 0, 0));
+		cycleLayer.setFillColors(colors);
+		cycleLayer.setSpotRadius(100);
+		cycleLayer.setLineWidth(4);
+		map.layers.add(cycleLayer);
+		
+		cityLayer = new MapLayer("Miasta");
+		colors = new Vector<Color>();
 		colors.add(Color.BLUE);
 		cityLayer.setFillColors(colors);
 		cityLayer.setTextVisible(true);
 		cityLayer.setSpotRadius(100);
 		map.layers.add(cityLayer);
+		
+		selectedCityLayer = new MapLayer("Miasta w grafie");
+		colors = new Vector<Color>();
+		colors.add(Color.RED);
+		selectedCityLayer.setFillColors(colors);
+		selectedCityLayer.setTextVisible(false);
+		selectedCityLayer.setSpotRadius(100);
+		map.layers.add(selectedCityLayer);
 		
 		map.setGridSize(10000);
 		map.setMinimalZoomForText(500);
@@ -96,6 +132,7 @@ public class Main extends JFrame
 		
 		// -------- Wczytywanie danych --------
 		cities = new ArrayList<City>();
+		selectedCities = new ArrayList<City>();
 		
 		try
 		{
@@ -174,12 +211,111 @@ public class Main extends JFrame
 	//  ========================= METODY KLASY ========================
 	
 	/**
+	 * Zaznaczenie miasta o danej nazwie i odrysowanie mapy
+	 * 
+	 * @param name	Nazwa miasta
+	 */
+	public void selectCity(String name)
+	{
+		selectCity(name, true);
+	}
+	
+	/**
+	 * Zaznaczenie miasta o danej nazwie
+	 * 
+	 * @param name	Nazwa miasta
+	 * @param repaint	Czy odrysować?
+	 */
+	public void selectCity(String name, boolean repaint)
+	{
+		for(City city : cities)
+		{
+			if(!city.name.equals(name))
+			{
+				continue;
+			}
+			
+			for(MapObject object : cityLayer.objects)
+			{
+				if(object.text.equals(name))
+				{
+					MapObject selected = new MapObject(object);
+					selected.symbol = selectedSymbol;
+					selectedCityLayer.objects.add(selected);
+					
+					break;
+				}
+			}
+			
+			break;
+		}
+		
+		if(repaint)
+		{
+			map.repaint();
+		}
+	}
+	
+	/**
+	 * Odaznaczenie miasta o danej nazwie i odrysowanie mapy
+	 * 
+	 * @param name	Nazwa miasta
+	 */
+	public void deselectCity(String name)
+	{
+		deselectCity(name, true);
+	}
+	
+	/**
+	 * Odzaznaczenie miasta o danej nazwie
+	 * 
+	 * @param name	Nazwa miasta
+	 * @param repaint	Czy odrysować?
+	 */
+	public void deselectCity(String name, boolean repaint)
+	{
+		for(MapObject object : selectedCityLayer.objects)
+		{
+			if(object.text.equals(name))
+			{
+				selectedCityLayer.objects.remove(object);
+				
+				break;
+			}
+		}
+		
+		if(repaint)
+		{
+			map.repaint();
+		}
+	}
+	
+	/**
+	 * Pobiera punkt, w którym leży miasto o danej nazwie
+	 * 
+	 * @param name	Nazwa miasta
+	 * @return	Punkt
+	 */
+	FPoint getCityPoint(String name)
+	{
+		for(City city : cities)
+		{
+			if(city.name.equals(name))
+			{
+				return city.point;
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
 	 * Metoda uruchamiająca program.
 	 * 
 	 * @param args	Argumenty wywołania
 	 */
 	public static void main(String[] args)
 	{
-		new Main();
+		Main main = new Main();
 	}
 }

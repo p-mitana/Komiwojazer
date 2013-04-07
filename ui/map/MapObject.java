@@ -37,6 +37,16 @@ public class MapObject
 		coords = new Vector<FPoint>();
 	}
 	
+	/**
+	 * Konstruktor kopiujący. Nie kopiuje obiektów składowych, tylko referencje.
+	 */
+	public MapObject(MapObject o)
+	{
+		coords = o.coords;
+		height = o.height;
+		text = o.text;
+		symbol = o.symbol;
+	}
 	//  ========================= METODY KLASY ========================
 	
 	/**

@@ -154,8 +154,10 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	 * 
 	 * @param g	Obiekt rysujący
 	 */
-	protected void paintComponent(Graphics g)
+	protected void paintComponent(Graphics gfx)
 	{
+		Graphics2D g = (Graphics2D) gfx;
+		
 		// Sprawdć blokadę rysowania
 		if(repaintLocked)
 		{
@@ -207,6 +209,8 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 		// Malowanie obiektów
 		for(MapLayer layer : layers)  // Warstwa 0 jest warstwą na spodzie
 		{
+			g.setStroke(new BasicStroke(layer.getLineWidth()));
+			
 			if(!layer.getEnabled())
 			{
 				continue;
@@ -381,10 +385,12 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	/**
 	 * Rysuje legendę
 	 * 
-	 * @param g	Obiekt rysujący
+	 * @param gfx	Obiekt rysujący
 	 */
-	protected void paintLegend(Graphics g)
+	protected void paintLegend(Graphics gfx)
 	{
+		Graphics2D g = (Graphics2D) gfx;
+		
 		// Parametry czcionki
 		FontMetrics metrics = getFontMetrics(g.getFont());
 		
@@ -448,6 +454,8 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 		// Opisy warstw
 		for(int i = 0; i < layers.size(); i++)
 		{
+			g.setStroke(new BasicStroke(layers.get(i).getLineWidth()));
+			
 			layerY += 20;
 			
 			// Do drugiej kolumny. Wcześniej narysowano odległość, więc narysowano już jeden wskaźnik więcej.
@@ -459,10 +467,20 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 			
 			if(layers.get(i).getFillColors().size() == 1)
 			{
-				g.setColor(layers.get(i).getFillColors().get(0));
-				g.fillRect(legendLeftX + layerX, legendTopY + layerY + 2, 16, 16);
-				g.setColor(layers.get(i).getDrawColor());
-				g.drawRect(legendLeftX + layerX, legendTopY + layerY + 2, 16, 16);
+				if(layers.get(i).getFillColors().get(0).equals(new Color(0, 0, 0, 0)))
+				{
+					g.setColor(layers.get(i).getDrawColor());
+					g.drawLine(legendLeftX + layerX, legendTopY + layerY + 2, legendLeftX + layerX + 16, legendTopY + layerY + 18);
+				}
+				
+				else
+				{
+					g.setColor(layers.get(i).getFillColors().get(0));
+					g.fillRect(legendLeftX + layerX, legendTopY + layerY + 2, 16, 16);
+					g.setColor(layers.get(i).getDrawColor());
+					g.drawRect(legendLeftX + layerX, legendTopY + layerY + 2, 16, 16);
+				}
+				
 				g.setColor(layers.get(i).getTextColor());
 				g.drawString(layers.get(i).getName(), legendLeftX + layerX + 20,
 							legendTopY + layerY + 10 + (metrics.getAscent() + metrics.getLeading())/2);
@@ -572,7 +590,8 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	 */
 	public void mousePressed(MouseEvent evt)
 	{
-		isDragged = true;
+		// Wyłączyłem rysowanie podczas przeciągania - nie ma potrzeby rysować wszystkiego.
+//		isDragged = true;
 		dragStart = pixelToMap(evt.getX(), evt.getY());
 	}
 	

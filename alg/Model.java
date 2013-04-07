@@ -95,9 +95,6 @@ public class Model extends AbstractModel
 	/** Ilość pokoleń, które już minęły */
 	private int generationsPassed;
 	
-	/** Aktualnie najkrótszy cykl  */
-	private Hamilton currentBest;
-	
 	//  ========================= KONSTRUKTORY KLASY =========================
 	
 	/**
@@ -118,7 +115,7 @@ public class Model extends AbstractModel
 	 */
 	public void initialize() throws ModelException
 	{
-		ecosystem = new Ecosystem(graph, parentCount, childCount, ((Hamilton[]) firstParents.toArray()), mutationFactor);
+		ecosystem = new Ecosystem(graph, parentCount, childCount, firstParents.toArray(new Hamilton[firstParents.size()]), mutationFactor);
 		simulator = new Simulator(ecosystem, listener);
 	}
 	
@@ -173,6 +170,7 @@ public class Model extends AbstractModel
 	public void addParent(int[] parent) throws ModelException
 	{
 		Hamilton hamilton = new Hamilton(parent);
+		firstParents.add(hamilton);
 	}
 	
 	/**
@@ -286,7 +284,7 @@ public class Model extends AbstractModel
 	 */
 	public int[] getCurrentBest()
 	{
-		return currentBest.getFenotype();
+		return getCurrentParents()[0];
 	}
 	
 	// ------ Metody kontrolujące symulację ------

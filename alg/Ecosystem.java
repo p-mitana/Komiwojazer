@@ -64,7 +64,7 @@ public class Ecosystem
 		this.parents = new Hamilton[parentCount];
 		this.children = new Hamilton[childCount];
 		this.mutationFactor = mutationFactor;
-		
+				
 		// Wybranie najlepszych rodziców
 		sortArray(parents);
 		for(int i = 0; i < this.parents.length; i++)
@@ -134,6 +134,7 @@ public class Ecosystem
 		{
 			children[i] = null;
 		}
+		
 	}
 	
 	/**

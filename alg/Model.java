@@ -62,6 +62,8 @@ public class Model extends AbstractModel
 					listener.progressUpdate(((double) i) / ((double) generationCount));
 				}
 			}
+			
+			listener.progressUpdate(1.0);
 		}
 	}
 	

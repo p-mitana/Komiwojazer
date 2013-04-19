@@ -10,18 +10,20 @@ import java.io.*;
 import java.util.*;
 import javax.imageio.*;
 import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.*;
 
 /**
  * Główna klasa programu. Zawiera okno główne i cały interfejs.
  */
-public class Main extends JFrame implements MapListener, ModelProgressListener
+public class Main extends JFrame implements MapListener, ModelProgressListener, DocumentListener, ActionListener
 {
 	//  ========================= KLASY WEWNĘTRZNE ========================
 	
 	/**
 	 * Pomocnicza klasa wewnętrzna, reprezentuje miasto
 	 */
-	class City
+	public class City
 	{
 		/** Nazwa miasta */
 		String name;
@@ -47,20 +49,65 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 	/** Lista nazw miast */
 	ArrayList<City> cities;
 	
+	/** Zaznaczone miasta */
+	ArrayList<City> selectedCities;
+	
 	/** Symbol podświetlonego miasta */
 	Image highlightedSymbol;
 	
 	/** Symbol zaznaczonego miasta */
 	Image selectedSymbol;
 	
-	/** Zaznaczone miasta */
-	ArrayList<City> selectedCities;
-	
 	/** Okienko postępu */
 	ProgressFrame progressFrame;
 	
+	/** Pole wyszukiwania */
+	PlaceholderTextField searchField;
+	
+	/** Panel wyszukiwania miast */
+	CityPanel cityPanel;
+	
+	/** Etykieta zliczająca zaznaczonych obiektów */
+	JLabel selectedCountLabel;
+	
+	/** Spinner rodziców początkowych */
+	JSpinner parentSpinner;
+	
+	/** Spinner limitu rodziców */
+	JSpinner parentLimitSpinner;
+	
+	/** Spinner limitu dzieci */
+	JSpinner childLimitSpinner;
+	
+	/** Spinner Spinner współczynnika mutacji */
+	JSpinner mutationFactorSpinner;
+	
+	/** Spinner ilości pokoleń */
+	JSpinner generationSpinner;
+	
+	/** Przycisk rozpoczęcia obliczeń */
+	JButton processButton;
+	
+	/** Etykieta wyświetlająca długość cyklu */
+	JLabel lengthLabel;
+	
 	/** Model */
 	Model model;
+	
+	/** Ilość rodziców początkowych */
+	int parentCount = 1000;
+	
+	/** Maksymalna ilość rodziców */
+	int parentLimit = 100;
+	
+	/** Maksymalna ilość dzieci */
+	int childLimit = 500;
+	
+	/** Współczynnik prawdopodobieństwa mutacji */
+	double mutationFactor = 0.001;
+	
+	/** Ilość pokoleń */
+	int generations = 100;
 	
 	//  ========================= KONSTRUKTORY KLASY ========================
 	
@@ -80,7 +127,7 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 		highlightedSymbol = null;
 		try
 		{
-			highlightedSymbol = ImageIO.read(new File("data/selectedCity.png"));
+			highlightedSymbol = ImageIO.read(new File("data/highlightedCity.png"));
 		}
 		catch(Exception ex){}
 		
@@ -91,6 +138,10 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 		}
 		catch(Exception ex){}
 		
+		// -------- Listy --------
+		cities = new ArrayList<City>();
+		selectedCities = new ArrayList<City>();
+		
 		// -------- Tworzenie interfejsu --------
 		
 		// Tworzenie układów
@@ -98,11 +149,35 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 		
 		// Tworzenie komponentów
 		map = new MapComponent();
-		JPanel rightPanel = new JPanel();
+		Box rightPanel = new Box(BoxLayout.PAGE_AXIS);
 		progressFrame = new ProgressFrame();
 		
+			// Prawy panel
+		searchField = new PlaceholderTextField();
+		cityPanel = new CityPanel(cities, selectedCities);
+		JScrollPane cityScroll = new JScrollPane(cityPanel);
+		selectedCountLabel = new JLabel();
+		JButton clearButton = new JButton("Wyczyść zaznaczenie");
+		
+		JLabel parentCountLabel = new JLabel("Liczba pierwszych osobników");
+		parentSpinner = new JSpinner(new SpinnerNumberModel(parentCount, 1, 1000000, 1));
+		
+		JLabel parentLimitLabel = new JLabel("Maksymlana liczba rodziców");
+		parentLimitSpinner = new JSpinner(new SpinnerNumberModel(parentLimit, 1, 1000000, 1));
+		
+		JLabel childLimitLabel = new JLabel("Maksymalna liczba dzieci");
+		childLimitSpinner = new JSpinner(new SpinnerNumberModel(childLimit, 1, 1000000, 1));
+		
+		JLabel mutationFactorLabel = new JLabel("Prawdopodobieństwo mutacji");
+		mutationFactorSpinner = new JSpinner(new SpinnerNumberModel(mutationFactor, 0.0, 1.0, 0.000001));
+		
+		JLabel generationLabel = new JLabel("Ilość pokoleń do symulacji");
+		generationSpinner = new JSpinner(new SpinnerNumberModel(generations, 1, 1000000, 1));
+		
+		processButton = new JButton("Rozpocznij");
+		
 		// Konfiguracja komponentów
-		cycleLayer = new MapLayer("Cykle");
+		cycleLayer = new MapLayer("Znaleziona trasa");
 		Vector<Color> colors = new Vector<Color>();
 		cycleLayer.setDrawColor(Color.RED);
 		colors.add(new Color(0, 0, 0, 0));
@@ -145,16 +220,89 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 		rightPanel.setMinimumSize(new Dimension(300, 0));
 		rightPanel.setPreferredSize(new Dimension(300, 300));
 		rightPanel.setMaximumSize(new Dimension(300, Integer.MAX_VALUE));
+		rightPanel.setBorder(new EmptyBorder(4, 4, 4, 4));
+		
+		// Pole wyszukiwania
+		searchField.getDocument().addDocumentListener(this);
+		searchField.setPlaceholder("Wyszukaj miejscowość");
+		searchField.setMinimumSize(new Dimension(-1, 24));
+		
+		// Panel miast
+		cityPanel.mainObject = this;
+		cityScroll.getViewport().setBackground(cityPanel.getBackground());
+		cityScroll.setMinimumSize(new Dimension(-1, 200));
+		
+		// Etykieta zliczająca ilość zaznaczonych miast
+		selectedCountLabel.setText("Zaznaczonych miast: 0");
+		
+		// Przycisk czyszczenia zaznaczenia
+		clearButton.addActionListener(this);
+		clearButton.setActionCommand("clear");
+		
+		// Spinnery
+		parentSpinner.setMinimumSize(new Dimension(150, 24));
+		parentSpinner.setMaximumSize(new Dimension(150, 24));
+		
+		parentLimitSpinner.setMinimumSize(new Dimension(150, 24));
+		parentLimitSpinner.setMaximumSize(new Dimension(150, 24));
+		
+		childLimitSpinner.setMinimumSize(new Dimension(150, 24));
+		childLimitSpinner.setMaximumSize(new Dimension(150, 24));
+		
+		mutationFactorSpinner.setMinimumSize(new Dimension(150, 24));
+		mutationFactorSpinner.setMaximumSize(new Dimension(150, 24));
+		
+		generationSpinner.setMinimumSize(new Dimension(150, 24));
+		generationSpinner.setMaximumSize(new Dimension(150, 24));
+		
+		// Przycisk rozpoczącia obliczeń
+		processButton.addActionListener(this);
+		processButton.setEnabled(false);
+		processButton.setActionCommand("process");
+		
+		// Etykieta długości
+		lengthLabel = new JLabel("Długość cyklu: 0.0 km");
 		
 		// Składanie interfejsu
 		add(mainLineBox);
 		mainLineBox.add(map);
 		mainLineBox.add(rightPanel);
 		
-		// -------- Wczytywanie danych --------
-		cities = new ArrayList<City>();
-		selectedCities = new ArrayList<City>();
+		rightPanel.add(searchField);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(cityScroll);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(selectedCountLabel);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(clearButton);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(parentCountLabel);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(parentSpinner);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(parentLimitLabel);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(parentLimitSpinner);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(childLimitLabel);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(childLimitSpinner);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(mutationFactorLabel);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(mutationFactorSpinner);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(generationLabel);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(generationSpinner);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(processButton);
+		rightPanel.add(rightPanel.createVerticalStrut(4));
+		rightPanel.add(lengthLabel);
 		
+		rightPanel.add(rightPanel.createVerticalStrut(Integer.MAX_VALUE));
+		
+		// -------- Wczytywanie danych --------
 		try
 		{
 			BufferedReader brin = new BufferedReader(new FileReader("data/data.txt"));
@@ -297,7 +445,15 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 		
 		if(repaint)
 		{
+			selectedCountLabel.setText(String.format("Zaznaczonych miast: %d", selectedCities.size()));
 			map.repaint();
+			cityPanel.find(searchField.getText());
+			cityPanel.repaint();
+			
+			if(selectedCities.size() > 2)
+			{
+				processButton.setEnabled(true);
+			}
 		}
 	}
 	
@@ -339,7 +495,15 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 		
 		if(repaint)
 		{
+			selectedCountLabel.setText(String.format("Zaznaczonych miast: %d", selectedCities.size()));
 			map.repaint();
+			cityPanel.find(searchField.getText());
+			cityPanel.repaint();
+			
+			if(selectedCities.size() <= 2)
+			{
+				processButton.setEnabled(false);
+			}
 		}
 	}
 	
@@ -360,6 +524,24 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * Lokalizuje miasto
+	 *
+	 * @param name	Nazwa miasta
+	 */
+	public void localizeCity(String name)
+	{
+		for(City c : cities)
+		{
+			if(c.name.equals(name))
+			{
+				map.setCenterPoint(c.point.x, c.point.y);
+				map.setUnitsPerPixel(200);
+				break;
+			}
+		}
 	}
 	
 	/**
@@ -423,11 +605,6 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 		model.setModelProgessListener(this);
 		
 		// Wczytywanie parametrów z komonentów [TODO]
-		int parentCount = 100;
-		int parentLimit = 100;
-		int childLimit = 200;
-		double mutationFactor = 0.001;
-		int generations = 10000;
 		
 		double[] x = new double[selectedCities.size()];
 		double[] y = new double[selectedCities.size()];
@@ -487,6 +664,7 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 		}
 		
 		// Wykonanie symulacji
+		progressFrame.start();
 		model.simulate(generations);
 		
 		// Blokowanie i otwarcie okna postępu
@@ -541,8 +719,6 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 				}
 			}
 		}
-		
-		process();
 	}
 	
 	/**
@@ -552,7 +728,11 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 	 */
 	public void progressUpdate(double progress)
 	{
-		System.out.println(progress);
+		if((int) (progress*1000.0) == progressFrame.getProgress())
+		{
+			return;
+		}
+		
 		progressFrame.update((int) (progress*1000.0));
 		
 		// Narysuj cykl, jeżeli zakończono
@@ -567,12 +747,73 @@ public class Main extends JFrame implements MapListener, ModelProgressListener
 			}
 		
 			paintCycle(result);
-			//lengthLabel.setText(String.format("Długość cyklu: %.3f km", getCycleLength(result) / 1000.0)));
+			lengthLabel.setText(String.format("Długość cyklu: %.3f km", getCycleLength(result) / 1000.0));
 		}
 	}
 	
 	/**
-	 * Metoda uruchamiająca program.
+	 * Aktualizuje listę znalezionych miast
+	 * 
+	 * @param evt	Zdarzenie
+	 */
+	public void changedUpdate(DocumentEvent evt)
+	{
+		cityPanel.find(searchField.getText());
+	}
+	
+	/**
+	 * Aktualizuje listę znalezionych miast
+	 * 
+	 * @param evt	Zdarzenie
+	 */
+	public void insertUpdate(DocumentEvent evt)
+	{
+		cityPanel.find(searchField.getText());
+	}
+	
+	/**
+	 * Aktualizuje listę znalezionych miast
+	 * 
+	 * @param evt	Zdarzenie
+	 */
+	public void removeUpdate(DocumentEvent evt)
+	{
+		cityPanel.find(searchField.getText());
+	}
+	
+	/**
+	 * Zdarzenia przycisków
+	 * 
+	 * @param evt	Zdarzenie
+	 */
+	public void actionPerformed(ActionEvent evt)
+	{
+		// Przycisk czyszczenia
+		if(evt.getActionCommand().equals("clear"))
+		{
+			cycleLayer.objects.clear();
+			
+			while(selectedCities.size() > 0)
+			{
+				deselectCity(selectedCities.get(0).name);
+			}
+		}
+		
+		// Przycisk obliczania
+		if(evt.getActionCommand().equals("process"))
+		{
+			parentCount = ((Integer) parentSpinner.getValue()).intValue();
+			parentLimit = ((Integer) parentLimitSpinner.getValue()).intValue();
+			childLimit = ((Integer) childLimitSpinner.getValue()).intValue();
+			mutationFactor = ((Double) mutationFactorSpinner.getValue()).doubleValue();
+			generations = ((Integer) generationSpinner.getValue()).intValue();
+			
+			process();
+		}
+	}
+	
+	/**
+	 * Metoda uruchamiająca program
 	 * 
 	 * @param args	Argumenty wywołania
 	 */

@@ -8,12 +8,18 @@ import javax.swing.*;
  */
 public class ProgressFrame extends JFrame
 {
+	//  ========================= POLA KLASY ========================
+	
 	/** Ikona postępu */
-	JLabel progressLabel;
+	private JLabel progressLabel;
 	
 	/** Pasek postępu */
-	JProgressBar progressBar;
+	private JProgressBar progressBar;
 	
+	/** Aktualny postęp */
+	private int progress;
+	
+	//  ========================= KONSTRUKTORY KLASY ========================
 	/**
 	 * Konstruktor klasy
 	 */
@@ -22,6 +28,7 @@ public class ProgressFrame extends JFrame
 	 	setTitle("Obliczanie...");
 		setLayout(null);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		setResizable(false);
 		
 		progressLabel = new JLabel();
 		progressLabel.setVisible(true);
@@ -41,11 +48,13 @@ public class ProgressFrame extends JFrame
 		setVisible(false);
 	}
 	
+	//  ========================= METODY KLASY ========================
 	/**
 	 * Wyświetla i zeruje
 	 */
 	public void start()
 	{
+		progress = 0;
 		progressBar.setValue(0);
 		progressLabel.setText("Postęp obliczeń: 0.0%");
 		setVisible(true);
@@ -58,6 +67,7 @@ public class ProgressFrame extends JFrame
 	 */
 	public void update(int progress)
 	{
+		this.progress = progress;
 		progressBar.setValue(progress);
 		progressLabel.setText(String.format("Postęp obliczeń: %.1f%%", (double) progress / 10.0));
 		
@@ -65,5 +75,15 @@ public class ProgressFrame extends JFrame
 		{
 			setVisible(false);
 		}
+	}
+	
+	/**
+	 * Pobiera aktualny postęp
+	 * 
+	 * @return	Postęp jako liczba 1-1000
+	 */
+	public int getProgress()
+	{
+		return progress;
 	}
 }

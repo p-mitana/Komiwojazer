@@ -26,6 +26,9 @@ public class MapObject
 	/** Symbol obiektu */
 	public Image symbol;
 	
+	/** Symbol obiektu, gdy podświetlony */
+	public Image highlightedSymbol;
+	
 	//  ========================= KONSTRUKTORY KLASY ========================
 	
 	/**

@@ -1,6 +1,7 @@
 package ui;
 
 import alg.*;
+import model.*;
 import ui.map.*;
 
 import java.awt.*;
@@ -13,7 +14,7 @@ import javax.swing.*;
 /**
  * Główna klasa programu. Zawiera okno główne i cały interfejs.
  */
-public class Main extends JFrame
+public class Main extends JFrame implements MapListener, ModelProgressListener
 {
 	//  ========================= KLASY WEWNĘTRZNE ========================
 	
@@ -46,11 +47,20 @@ public class Main extends JFrame
 	/** Lista nazw miast */
 	ArrayList<City> cities;
 	
+	/** Symbol podświetlonego miasta */
+	Image highlightedSymbol;
+	
 	/** Symbol zaznaczonego miasta */
 	Image selectedSymbol;
 	
 	/** Zaznaczone miasta */
 	ArrayList<City> selectedCities;
+	
+	/** Okienko postępu */
+	ProgressFrame progressFrame;
+	
+	/** Model */
+	Model model;
 	
 	//  ========================= KONSTRUKTORY KLASY ========================
 	
@@ -64,6 +74,13 @@ public class Main extends JFrame
 		try
 		{
 			symbol = ImageIO.read(new File("data/city.png"));
+		}
+		catch(Exception ex){}
+		
+		highlightedSymbol = null;
+		try
+		{
+			highlightedSymbol = ImageIO.read(new File("data/selectedCity.png"));
 		}
 		catch(Exception ex){}
 		
@@ -82,6 +99,7 @@ public class Main extends JFrame
 		// Tworzenie komponentów
 		map = new MapComponent();
 		JPanel rightPanel = new JPanel();
+		progressFrame = new ProgressFrame();
 		
 		// Konfiguracja komponentów
 		cycleLayer = new MapLayer("Cykle");
@@ -100,19 +118,22 @@ public class Main extends JFrame
 		cityLayer.setTextVisible(true);
 		cityLayer.setSpotRadius(100);
 		map.layers.add(cityLayer);
+		map.interactiveLayers.add(cityLayer);
 		
 		selectedCityLayer = new MapLayer("Miasta w grafie");
 		colors = new Vector<Color>();
 		colors.add(Color.RED);
 		selectedCityLayer.setFillColors(colors);
-		selectedCityLayer.setTextVisible(false);
+		selectedCityLayer.setTextVisible(true);
+		selectedCityLayer.setTextForced(true);
 		selectedCityLayer.setSpotRadius(100);
 		map.layers.add(selectedCityLayer);
 		
+		// Mapa
+		map.listener = this;
 		map.setGridSize(10000);
 		map.setMinimalZoomForText(500);
 		map.setUnitsPerPixel(1000);
-		// Mapa
 		
 		// Okno
 		setTitle("Komiwojażer - Kołdarz, Komnata, Mitana");
@@ -196,6 +217,7 @@ public class Main extends JFrame
 				obj.coords.add(city.point);
 				obj.text = city.name;
 				obj.symbol = symbol;
+				obj.highlightedSymbol = highlightedSymbol;
 				cityLayer.objects.add(obj);
 			}
 		}
@@ -209,6 +231,25 @@ public class Main extends JFrame
 	}
 	
 	//  ========================= METODY KLASY ========================
+	
+	/**
+	 * Sprawdza, czy miasto jest zaznaczone
+	 * 
+	 * @param name	Nazwa miasta
+	 * @return	Czy zaznaczone?
+	 */
+	public boolean isCitySelected(String name)
+	{
+		for(City city : selectedCities)
+		{
+			if(city.name.equals(name))
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
 	
 	/**
 	 * Zaznaczenie miasta o danej nazwie i odrysowanie mapy
@@ -233,6 +274,10 @@ public class Main extends JFrame
 			if(!city.name.equals(name))
 			{
 				continue;
+			}
+			else
+			{
+				selectedCities.add(city);
 			}
 			
 			for(MapObject object : cityLayer.objects)
@@ -274,12 +319,20 @@ public class Main extends JFrame
 	 */
 	public void deselectCity(String name, boolean repaint)
 	{
+		for(City c : selectedCities)
+		{
+			if(c.name.equals(name))
+			{
+				selectedCities.remove(c);
+				break;
+			}
+		}
+	
 		for(MapObject object : selectedCityLayer.objects)
 		{
 			if(object.text.equals(name))
 			{
 				selectedCityLayer.objects.remove(object);
-				
 				break;
 			}
 		}
@@ -362,51 +415,46 @@ public class Main extends JFrame
 	}
 	
 	/**
-	 * Metoda uruchamiająca program.
-	 * 
-	 * @param args	Argumenty wywołania
+	 * Wykonaj obliczenia
 	 */
-	public static void main(String[] args)
+	public void process()
 	{
-		Main main = new Main();
+		model = new Model();
+		model.setModelProgessListener(this);
 		
-		// TESTOWE OBLICZENIA
+		// Wczytywanie parametrów z komonentów [TODO]
+		int parentCount = 100;
+		int parentLimit = 100;
+		int childLimit = 200;
+		double mutationFactor = 0.001;
+		int generations = 10000;
 		
-		// Tworzenie modelu
-		Model model = new Model();
+		double[] x = new double[selectedCities.size()];
+		double[] y = new double[selectedCities.size()];
 		
-		String[] array = {"Kraków", "Warszawa", "Lublin", "Gdańsk", "Płock", "Katowice",
-						"Krosno", "Elbląg", "Wrocław", "Poznań", "Zakopane", "Rzeszów",
-						"Szczecin", "Białystok", "Olsztyn", "Piła", "Grudziądz", "Radom",
-						"Opole", "Kielce", "Tarnów", "Łódź"};
-		
-		double[] x = new double[array.length];
-		double[] y = new double[array.length];
-		
-		for(int i = 0; i < array.length; i++)
+		// Tworzenie grafu planarnego
+		for(int i = 0; i < selectedCities.size(); i++)
 		{
-			main.selectCity(array[i], false);
-			FPoint point = main.getCityPoint(array[i]);
-			
-			x[i] = (double) point.x;
-			y[i] = (double) point.y;
+			x[i] = (double) selectedCities.get(i).point.x;
+			y[i] = (double) selectedCities.get(i).point.y;
 		}
 		
 		model.createPlanarGraph(x, y);
 		
-		// Losowanie rodziców
+		// Stworzenie listy z kolejnymi liczbami naturalnymi
 		ArrayList<Integer> numberList = new ArrayList<Integer>();
-		for(int i = 0; i < array.length; i++)
+		for(int i = 0; i < selectedCities.size(); i++)
 		{
 			numberList.add(new Integer(i));
 		}
 		
-		for(int i = 0; i < 100; i++)
+		// Losowanie rodziców
+		for(int i = 0; i < parentCount; i++)
 		{
 			Collections.shuffle(numberList);
-			int[] parent = new int[array.length];
+			int[] parent = new int[selectedCities.size()];
 			
-			for(int j = 0; j < array.length; j++)
+			for(int j = 0; j < selectedCities.size(); j++)
 			{
 				parent[j] = numberList.get(j);
 			}
@@ -422,10 +470,12 @@ public class Main extends JFrame
 			}
 		}
 		
-		model.setParentLimit(100);
-		model.setChildLimit(200);
-		model.setMutationFactor(0.001);
+		// Ustawianie parametrów
+		model.setParentLimit(parentLimit);
+		model.setChildLimit(childLimit);
+		model.setMutationFactor(mutationFactor);
 		
+		// Inicjalizacja modelu
 		try
 		{
 			model.initialize();
@@ -436,27 +486,98 @@ public class Main extends JFrame
 			System.exit(0);
 		}
 		
-		model.simulate(10000);
+		// Wykonanie symulacji
+		model.simulate(generations);
 		
-		try
+		// Blokowanie i otwarcie okna postępu
+		//setLocked(true);
+		//launchProgressWindow();
+	}
+	
+	/**
+	 * Obsługa kliknięcia mapy
+	 * 
+	 * @return	Określa, czy mapa ma rozpocząć zaznaczanie oknem
+	 */
+	public boolean mapClicked()
+	{
+		if(cityLayer.getHighlightedObject() != null)
 		{
-			Thread.currentThread().sleep(1000);
+			String city = cityLayer.getHighlightedObject().text;
+			
+			if(!isCitySelected(city))
+			{
+				selectCity(city);
+			}
+			else
+			{
+				deselectCity(city);
+			}
+			
+			return false;
 		}
-		catch(Exception ex)
+		
+		else return true;
+	}
+	
+	/**
+	 * Obsługuje zaznaczenie oknem
+	 */
+	public void mapWindowFinished(FPoint start, FPoint end)
+	{
+		for(City city : cities)
 		{
-			ex.printStackTrace();
-			System.exit(0);
+			if(((city.point.x > start.x && city.point.x < end.x) || (city.point.x > end.x && city.point.x < start.x)) &&
+				((city.point.y > start.y && city.point.y < end.y) || (city.point.y > end.y && city.point.y < start.y)))
+			{
+			
+				if(!isCitySelected(city.name))
+				{
+					selectCity(city.name);
+				}
+				else
+				{
+					deselectCity(city.name);
+				}
+			}
 		}
 		
-		int[] best = model.getCurrentBest();
-		String[] result = new String[best.length];
+		process();
+	}
+	
+	/**
+	 * Aktualizuje postęp modelu
+	 * 
+	 * @param progress	Ułamek postępu
+	 */
+	public void progressUpdate(double progress)
+	{
+		System.out.println(progress);
+		progressFrame.update((int) (progress*1000.0));
 		
-		for(int i = 0; i < best.length; i++)
+		// Narysuj cykl, jeżeli zakończono
+		if(progress == 1.0)
 		{
-			result[i] = array[best[i]];
-		}
+			int[] best = model.getCurrentBest();
+			String[] result = new String[best.length];
 		
-		main.paintCycle(result);
-		System.out.println(String.format("Długość cyklu: %.3f km", main.getCycleLength(result) / 1000.0));
+			for(int i = 0; i < best.length; i++)
+			{
+				result[i] = selectedCities.get(best[i]).name;
+			}
+		
+			paintCycle(result);
+			//lengthLabel.setText(String.format("Długość cyklu: %.3f km", getCycleLength(result) / 1000.0)));
+		}
+	}
+	
+	/**
+	 * Metoda uruchamiająca program.
+	 * 
+	 * @param args	Argumenty wywołania
+	 */
+	public static void main(String[] args)
+	{
+		Main main = new Main();
 	}
 }

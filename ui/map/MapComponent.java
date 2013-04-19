@@ -19,6 +19,9 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	/** Lista warstw */
 	public Vector<MapLayer> layers;
 	
+	/** Lista interaktywnych warstw */
+	public Vector<MapLayer> interactiveLayers;
+	
 	/** Kolor tła */
 	private Color backgroundColor;
 	
@@ -67,6 +70,18 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	/** Punkt zakończenia przeciągania myszą */
 	private FPoint dragEnd;
 	
+	/** Interfejs obsługujący interakcję programu z mapą */
+	public MapListener listener;
+	
+	/** Określa, czy jest aktywny tryb tworzenia okienka */
+	private boolean windowMode = false;
+	
+	/** Określa punkt startowy okienka */
+	private FPoint windowStart;
+	
+	/** Pozycja kursora myszy */
+	private Point cursorPosition;
+	
 	//  ========================= KONSTRUKTORY KLASY ========================
 	
 	/**
@@ -75,6 +90,7 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	public MapComponent()
 	{
 		layers = new Vector<MapLayer>();
+		interactiveLayers = new Vector<MapLayer>();
 		
 		// Inicjalizacja parametrów domyślnych
 		backgroundColor = new Color(255, 255, 255);  // Domyślnie biały
@@ -218,167 +234,223 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 			
 			for(MapObject object : layer.objects)
 			{
-				int size = object.coords.size();
-				
-				int[] xcoords = new int[size];
-				int[] ycoords = new int[size];
-				
-				/*
-				 * Sprawdzanie, czy obiekt może znajdować się na widocznej
-				 * części mapy. Jeśli nie, nie będzie rysowany
-				 */
-				boolean needsDrawing = false;
-				
-				float minX = 0, maxX = 0, minY = 0, maxY = 0;
-				
-				if(object.coords.size() > 0)
-				{
-					minX = object.coords.get(0).x;
-					maxX = object.coords.get(0).x;
-					minY = object.coords.get(0).y;
-					maxY = object.coords.get(0).y;
-				
-					Point p = mapToPixel(object.coords.get(0).x, object.coords.get(0).y);
-					xcoords[0] = p.x;
-					ycoords[0] = p.y;
-					
-					for(int i = 1; i < object.coords.size(); i++)
-					{
-						FPoint fp = object.coords.get(i);
-						minX = fp.x < minX ? fp.x : minX;
-						maxX = fp.x > maxX ? fp.x : maxX;
-						minY = fp.y < minY ? fp.y : minY;
-						maxY = fp.y > maxY ? fp.y : maxY;
-						
-						p = mapToPixel(object.coords.get(i).x, object.coords.get(i).y);
-						xcoords[i] = p.x;
-						ycoords[i] = p.y;
-					}
-					
-					needsDrawing = true;
-					
-					if((minX < leftX && maxX < leftX) || (minX > rightX && maxX > rightX) ||
-						(minY < topY && maxY < topY) || (minY > bottomY && maxY > bottomY))
-					{
-						needsDrawing = false;
-					}
-				}
-				
-				// Rysowanie, jeśli trzeba
-				if(needsDrawing)
-				{
-					// Określenie koloru
-					int colorIndex = (int) ((object.height - layer.getHeightMinimum()) / layer.getHeightInterval());
-					colorIndex = colorIndex < 0 ? 0 : colorIndex;
-					colorIndex = colorIndex >= layer.getFillColors().size() ? layer.getFillColors().size()-1 : colorIndex;
-					Color fillColor = layer.getFillColors().get(colorIndex);
-					g.setColor(fillColor);
-					
-					// Narysuj wielokąt
-					if(object.coords.size() > 1)
-					{
-						g.fillPolygon(xcoords, ycoords, size);
-						
-						if(!layer.getBorderless())
-						{
-							g.setColor(layer.getDrawColor());
-							g.drawPolygon(xcoords, ycoords, size);
-						}
-					}
-					
-					// Jeden punkt - obrazek, kropka lub kółeczko
-					else
-					{
-						// Symbol
-						if(object.symbol != null)
-						{
-							g.setColor(fillColor);
-							Point p = mapToPixel(object.coords.get(0).x, object.coords.get(0).y);
-							
-							g.drawImage(object.symbol, p.x - object.symbol.getWidth(this)/2, p.y - object.symbol.getHeight(this)/2, this);
-						}
-						
-						// Kropka lub kółeczko
-						else
-						{
-							Point p = mapToPixel(object.coords.get(0).x - layer.getSpotRadius(), object.coords.get(0).y - layer.getSpotRadius());
-							
-							// Oblicz promień punktu w pikselach
-							int pointRadius = (int) (layer.getSpotRadius() / unitsPerPixel);
-							pointRadius = pointRadius < 1 ? 1 : pointRadius;
-							
-							// Kropka - za małe na kółeczko
-							if(pointRadius <= 2)
-							{
-								g.fillRect(p.x, p.y, 2*pointRadius, 2*pointRadius);
-							}
-							
-							// Narysuj kółeczko
-							if(!layer.getBorderless() && pointRadius > 2)
-							{
-								g.fillOval(p.x, p.y, 2*pointRadius, 2*pointRadius);
-								g.setColor(layer.getDrawColor());
-								g.drawOval(p.x, p.y, 2*pointRadius, 2*pointRadius);
-							}
-						}
-					}
-					
-					// Tekst rysuj tylko przy dużym powiększeniu
-					if(unitsPerPixel <= minimalZoomForText && layer.getTextVisible())
-					{
-						// Liczba linii
-						int lines = object.text.split("\r\n|\r|\n").length;
-						
-						// Wymiary tekstu
-						int textWidth = metrics.stringWidth(object.text);
-						
-						// Liczba linii * wysokość wiersza
-						int textHeight = metrics.getHeight()*lines - metrics.getDescent();
-						
-						// Określenie środkowego punktu budynku
-						int centerWidth = 0;
-						int centerHeight = 0;
-						
-						for(int i = 0; i < xcoords.length; i++)
-						{
-							centerWidth += xcoords[i];
-							centerHeight += ycoords[i];
-						}
-						
-						centerWidth /= xcoords.length;
-						centerHeight /= ycoords.length;
-						
-						// Jest punkt. Dlatego, jak jest obrazek lub zbyt małe kółeczko, trzeba odsunąć tekst.
-						if(object.coords.size() == 1)
-						{
-							if(object.symbol != null)
-							{
-								centerHeight += object.symbol.getHeight(this)/2 + 5;  // Tekst będzie pod symbolem
-							}
-							else
-							{
-								int pointRadius = (int) (layer.getSpotRadius() / unitsPerPixel);
-								
-								// Nie mieści się w kwadracie wpisanym w kółeczko
-								if(textWidth > 1.41*pointRadius || textHeight > 1.41*pointRadius)
-								{
-									centerHeight += pointRadius + textHeight;  // Tekst będzie pod punktem
-								}
-							}
-						}
-						
-						// Narysowanie tekstu
-						g.setColor(layer.getTextColor());
-						g.drawString(object.text, centerWidth-(textWidth/2), centerHeight+(textHeight/2));
-					}
-				}
+				paintObject(g, object, layer, metrics, topY, bottomY, leftX, rightX);
 			}
+			
+			// Powtórz rysowanie obiektu podświetlonego
+			if(layer.getHighlightedObject() != null)
+			{
+				paintObject(g, layer.getHighlightedObject(), layer, metrics, topY, bottomY, leftX, rightX);
+			}
+		}
+		
+		if(windowMode)
+		{
+			Point p = mapToPixel(windowStart.x, windowStart.y);
+			
+			g.setColor(new Color(0, 0, 0));
+			
+			int x = Math.min(p.x, cursorPosition.x);
+			int y = Math.min(p.y, cursorPosition.y);
+			int w = Math.abs(cursorPosition.x - p.x);
+			int h = Math.abs(cursorPosition.y - p.y);
+			
+			g.drawRect(x, y, w, h);
 		}
 		
 		// Namaluj legendę, jeżeli trzeba
 		if(legend.isSelected())
 		{
 			paintLegend(g);
+		}
+	}
+	
+	/**
+	 * Rysuje obiekt
+	 * 
+	 * @param g	Obiekt rysujący
+	 * @param object	Obiekt do narysowania
+	 * @param layer	Warstwa
+	 * @param metrics	Obiekt z parametrami czcionki
+	 * @param topY	Górny zakres widżetu na mapie
+	 * @param bottomY	Dolny zakres widżetu na mapie
+	 * @param leftX	Lewy zakres widżetu na mapie
+	 * @param rightX	Prawy zakres widżetu na mapie
+	 */
+	protected void paintObject(Graphics2D g, MapObject object, MapLayer layer, FontMetrics metrics,
+								float topY, float bottomY, float leftX, float rightX)
+	{
+		int size = object.coords.size();
+		
+		int[] xcoords = new int[size];
+		int[] ycoords = new int[size];
+		
+		/*
+		 * Sprawdzanie, czy obiekt może znajdować się na widocznej
+		 * części mapy. Jeśli nie, nie będzie rysowany
+		 */
+		boolean needsDrawing = false;
+		
+		float minX = 0, maxX = 0, minY = 0, maxY = 0;
+		
+		if(object.coords.size() > 0)
+		{
+			minX = object.coords.get(0).x;
+			maxX = object.coords.get(0).x;
+			minY = object.coords.get(0).y;
+			maxY = object.coords.get(0).y;
+		
+			Point p = mapToPixel(object.coords.get(0).x, object.coords.get(0).y);
+			xcoords[0] = p.x;
+			ycoords[0] = p.y;
+			
+			for(int i = 1; i < object.coords.size(); i++)
+			{
+				FPoint fp = object.coords.get(i);
+				minX = fp.x < minX ? fp.x : minX;
+				maxX = fp.x > maxX ? fp.x : maxX;
+				minY = fp.y < minY ? fp.y : minY;
+				maxY = fp.y > maxY ? fp.y : maxY;
+				
+				p = mapToPixel(object.coords.get(i).x, object.coords.get(i).y);
+				xcoords[i] = p.x;
+				ycoords[i] = p.y;
+			}
+			
+			needsDrawing = true;
+			
+			if((minX < leftX && maxX < leftX) || (minX > rightX && maxX > rightX) ||
+				(minY < topY && maxY < topY) || (minY > bottomY && maxY > bottomY))
+			{
+				needsDrawing = false;
+			}
+		}
+		
+		// Rysowanie, jeśli trzeba
+		if(needsDrawing)
+		{
+		
+			// Określenie koloru
+			int colorIndex = (int) ((object.height - layer.getHeightMinimum()) / layer.getHeightInterval());
+			colorIndex = colorIndex < 0 ? 0 : colorIndex;
+			colorIndex = colorIndex >= layer.getFillColors().size() ? layer.getFillColors().size()-1 : colorIndex;
+			Color fillColor = layer.getFillColors().get(colorIndex);
+			g.setColor(layer.getHighlightedObject() == object ? layer.getHighlightColor() : fillColor);
+		
+			// Narysuj wielokąt
+			if(object.coords.size() > 1)
+			{
+				g.fillPolygon(xcoords, ycoords, size);
+			
+				if(!layer.getBorderless())
+				{
+					g.setColor(layer.getDrawColor());
+					g.drawPolygon(xcoords, ycoords, size);
+				}
+			}
+		
+			// Jeden punkt - obrazek, kropka lub kółeczko
+			else
+			{
+				// Symbol
+				if(object.highlightedSymbol != null && layer.getHighlightedObject() == object)
+				{
+					Point p = mapToPixel(object.coords.get(0).x, object.coords.get(0).y);
+				
+					g.drawImage(object.highlightedSymbol, p.x - object.highlightedSymbol.getWidth(this)/2, p.y - object.highlightedSymbol.getHeight(this)/2, this);
+				}
+			
+				else if(object.symbol != null)
+				{
+					Point p = mapToPixel(object.coords.get(0).x, object.coords.get(0).y);
+				
+					g.drawImage(object.symbol, p.x - object.symbol.getWidth(this)/2, p.y - object.symbol.getHeight(this)/2, this);
+				}
+			
+				// Kropka lub kółeczko
+				else
+				{
+					Point p = mapToPixel(object.coords.get(0).x - layer.getSpotRadius(), object.coords.get(0).y - layer.getSpotRadius());
+				
+					// Oblicz promień punktu w pikselach
+					int pointRadius = (int) (layer.getSpotRadius() / unitsPerPixel);
+					pointRadius = pointRadius < 1 ? 1 : pointRadius;
+				
+					// Kropka - za małe na kółeczko
+					if(pointRadius <= 2)
+					{
+						g.fillRect(p.x, p.y, 2*pointRadius, 2*pointRadius);
+					}
+				
+					// Narysuj kółeczko
+					if(!layer.getBorderless() && pointRadius > 2)
+					{
+						g.fillOval(p.x, p.y, 2*pointRadius, 2*pointRadius);
+						g.setColor(layer.getDrawColor());
+						g.drawOval(p.x, p.y, 2*pointRadius, 2*pointRadius);
+					}
+				}
+			}
+		
+			// Tekst rysuj tylko przy dużym powiększeniu lub przy wymuszeniu
+			if((unitsPerPixel <= minimalZoomForText || layer.getTextForced() || layer.getHighlightedObject() == object)
+				&& layer.getTextVisible())
+			{
+				// Liczba linii
+				int lines = object.text.split("\r\n|\r|\n").length;
+			
+				// Wymiary tekstu
+				int textWidth = metrics.stringWidth(object.text);
+			
+				// Liczba linii * wysokość wiersza
+				int textHeight = metrics.getHeight()*lines - metrics.getDescent();
+			
+				// Określenie środkowego punktu budynku
+				int centerWidth = 0;
+				int centerHeight = 0;
+			
+				for(int i = 0; i < xcoords.length; i++)
+				{
+					centerWidth += xcoords[i];
+					centerHeight += ycoords[i];
+				}
+			
+				centerWidth /= xcoords.length;
+				centerHeight /= ycoords.length;
+			
+				// Jest punkt. Dlatego, jak jest obrazek lub zbyt małe kółeczko, trzeba odsunąć tekst.
+				if(object.coords.size() == 1)
+				{
+					if(object.symbol != null)
+					{
+						centerHeight -= object.symbol.getHeight(this)/2 + 10;  // Tekst będzie nad symbolem
+					}
+					else
+					{
+						int pointRadius = (int) (layer.getSpotRadius() / unitsPerPixel);
+					
+						// Nie mieści się w kwadracie wpisanym w kółeczko
+						if(textWidth > 1.41*pointRadius || textHeight > 1.41*pointRadius)
+						{
+							centerHeight -= pointRadius + textHeight;  // Tekst będzie nad punktem
+						}
+					}
+				}
+				
+				// Narysowanie prostokąta wokół tekstu, jeżeli jest to podświetlony obiekt
+				if(layer.getHighlightedObject() == object)
+				{
+					g.setColor(layer.getHighlightColor());
+					g.fillRect(centerWidth-(textWidth/2)-2, centerHeight-(textHeight/2)-2, textWidth+4, textHeight+4);
+
+					g.setColor(layer.getTextColor());
+					g.drawRect(centerWidth-(textWidth/2)-2, centerHeight-(textHeight/2)-2, textWidth+4, textHeight+4);
+				}
+			
+				// Narysowanie tekstu
+				g.setColor(layer.getTextColor());
+				g.drawString(object.text, centerWidth-(textWidth/2), centerHeight+(textHeight/2));
+			}
 		}
 	}
 	
@@ -612,7 +684,27 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	 * 
 	 * @param evt	Zdarzenie
 	 */
-	public void mouseClicked(MouseEvent evt){}
+	public void mouseClicked(MouseEvent evt)
+	{
+		if(listener != null)
+		{
+			if(windowMode)
+			{
+				FPoint windowEnd = pixelToMap(evt.getX(), evt.getY());
+				windowMode = false;
+				repaint();
+				listener.mapWindowFinished(windowStart, windowEnd);
+			}
+			else
+			{
+				if(listener.mapClicked())
+				{
+					windowMode = true;
+					windowStart = pixelToMap(evt.getX(), evt.getY());
+				}
+			}
+		}
+	}
 	
 	/**
 	 * Przeciągnięcie myszą
@@ -650,12 +742,29 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	 */
 	public void mouseMoved(MouseEvent evt)
 	{
+		cursorPosition = new Point(evt.getX(), evt.getY());
+		
 		if(statusLabel != null)
 		{
 			FPoint fpoint = pixelToMap(evt.getX(), evt.getY());
 			statusLabel.setText("x: " + Math.round(fpoint.x*10) / 10.0 +
 								" y: " + Math.round(fpoint.y*10) / 10.0);
 		}
+		
+		// Określenie najbliższego obiektu
+		for(MapLayer layer : interactiveLayers)
+		{
+			FPoint fpoint = pixelToMap(evt.getX(), evt.getY());
+			layer.highlightNearest(fpoint, unitsPerPixel * 10.0f);
+		}
+		
+		repaint();
+		
+		try
+		{
+			Thread.currentThread().sleep(10);  // To żeby nie odrysowywać zbyt często.
+		}
+		catch(Exception ex){}
 	}
 	
 	

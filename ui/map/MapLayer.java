@@ -25,8 +25,14 @@ public class MapLayer
 	/** Określa, czy tekst jest widoczny */
 	private boolean textVisible;
 	
+	/** Określa, czy tekst jest widoczny niezależnie od powiększenia */
+	private boolean textForced;
+	
 	/** Kolor obramowania elementów */
 	private Color drawColor;
+	
+	/** Kolor podświetlenia */
+	private Color highlightColor;
 	
 	/** Kolor tekstu */
 	private Color textColor;
@@ -45,6 +51,9 @@ public class MapLayer
 	
 	/** Promień obiektu o jednym punkcie składowym */
 	private float spotRadius;
+	
+	/** Podświetlony kursorem obiekt */
+	private MapObject highlightedObject;
 	
 	/** Wektor obiektów na tej warstwie */
 	public Vector<MapObject> objects;
@@ -67,10 +76,12 @@ public class MapLayer
 	{
 		this.name = name;
 		textVisible = false;
+		textForced = false;
 		drawColor = new Color(0, 0, 0);
 		fillColors = new Vector<Color>();
 		fillColors.add(new Color(255, 255, 255));
 		textColor = new Color(0, 0, 0);
+		highlightColor = new Color(255, 255, 255);
 		lineWidth = 1;
 		heightMinimum = 0;
 		heightInterval = 1;
@@ -102,6 +113,51 @@ public class MapLayer
 		}
 		
 		return 0.0f;
+	}
+	
+	/**
+	 * Podświetla najbliższy obiekt
+	 * 
+	 * @param p	Punkt, wokół którego szukamy
+	 * @param d	Odległość, jeżeli obiekt jest punktowy
+	 */
+	public void highlightNearest(FPoint p, float d)
+	{
+		MapObject obj = null;
+		float distance = Float.POSITIVE_INFINITY;
+		
+		for(MapObject object : objects)
+		{
+			if(object.coords.size() > 1)
+			{
+				if(object.contains(p))  // Obiekt obszarowy musi zawierać punkt
+				{
+					highlightedObject = object;
+					return;  // Nie szukaj drugiego
+				}
+			}
+			
+			else
+			{
+				FPoint point = object.coords.get(0);
+				float dist = (float) Math.sqrt(Math.pow(point.x - p.x, 2.0f) + (Math.pow(point.y - p.y, 2.0f)));
+				
+				if(dist < distance)
+				{
+					distance = dist;
+					obj = object;
+				}
+			}
+		}
+		
+		if(obj != null && distance < d)
+		{
+			highlightedObject = obj;
+		}
+		else
+		{
+			highlightedObject = null;
+		}
 	}
 	
 	/**
@@ -299,6 +355,34 @@ public class MapLayer
 	}
 	
 	/**
+	 * Ustawia kolor podświetlenia - biały, gdy przekażemy null
+
+	 * 
+	 * @param color	Kolor
+	 */
+	public void setHighlightColor(Color color)
+	{
+		if(color == null)
+		{
+			highlightColor = new Color(255, 255, 255);
+		}
+		else
+		{
+			highlightColor = color;
+		}
+	}
+	
+	/**
+	 * Zwraca kolor podświetlenia
+	 * 
+	 * @return	Kolor
+	 */
+	public Color getHighlightColor()
+	{
+		return highlightColor;
+	}
+
+	/**
 	 * Ustawia widoczność tekstu
 	 * 
 	 * @param b	Widoczność tekstu
@@ -316,6 +400,28 @@ public class MapLayer
 	public boolean getTextVisible()
 	{
 		return textVisible;
+	}
+	
+	/**
+
+	 * Ustawia wymuszenie widoczności tekstu (niezależnie od powiększenia)
+	 * 
+	 * @param b	Wymuszenie widoczności tekstu
+	 */
+	public void setTextForced(boolean b)
+	{
+		textForced = b;
+	}
+	
+	/**
+	 * Zwraca wymuszenie widoczności tekstu (niezależnie od powiększenia)
+	 * 
+	 * @return	Wymuszenie widoczności tekstu
+
+	 */
+	public boolean getTextForced()
+	{
+		return textForced;
 	}
 	
 	/**
@@ -339,5 +445,15 @@ public class MapLayer
 	public int getLineWidth()
 	{
 		return lineWidth;
+	}
+	
+	/**
+	 * Zwraca podświetlony obiekt
+	 * 
+	 * @return	Podświetlony obiekt
+	 */
+	public MapObject getHighlightedObject()
+	{
+		return highlightedObject;
 	}
 }

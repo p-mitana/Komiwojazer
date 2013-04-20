@@ -135,6 +135,20 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	//  ========================= METODY KLASY ========================
 	
 	/**
+	 * Przełącza aktywność komponentu
+	 * 
+	 * @praram enabled	Czy ma być aktywny
+	 */
+	public void setEnabled(boolean enabled)
+	{
+		super.setEnabled(enabled);
+		
+		zoomOut.setEnabled(enabled);
+		zoomIn.setEnabled(enabled);
+		legend.setEnabled(enabled);
+	}
+	
+	/**
 	 * Przekształca punkt na mapie na punkt na ekranie
 	 * 
 	 * @param x	Współrzędna X na mapie
@@ -649,6 +663,11 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	 */
 	public void mouseExited(MouseEvent evt)
 	{
+		if(!isEnabled())
+		{
+			return;
+		}
+		
 		if(statusLabel != null)
 		{
 			statusLabel.setText(" ");
@@ -662,6 +681,11 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	 */
 	public void mousePressed(MouseEvent evt)
 	{
+		if(!isEnabled())
+		{
+			return;
+		}
+		
 		// Wyłączyłem rysowanie podczas przeciągania - nie ma potrzeby rysować wszystkiego.
 //		isDragged = true;
 		dragStart = pixelToMap(evt.getX(), evt.getY());
@@ -674,6 +698,11 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	 */
 	public void mouseReleased(MouseEvent evt)
 	{
+		if(!isEnabled())
+		{
+			return;
+		}
+		
 		// Odblokowanie i odrysowanie
 		isDragged = false;
 		repaint();
@@ -686,6 +715,11 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	 */
 	public void mouseClicked(MouseEvent evt)
 	{
+		if(!isEnabled())
+		{
+			return;
+		}
+		
 		if(listener != null)
 		{
 			if(windowMode)
@@ -713,6 +747,11 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	 */
 	public void mouseDragged(MouseEvent evt)
 	{
+		if(!isEnabled())
+		{
+			return;
+		}
+		
 		// Przesunięcie
 		dragEnd = pixelToMap(evt.getX(), evt.getY());
 		centerX -= dragEnd.x - dragStart.x;
@@ -742,6 +781,11 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	 */
 	public void mouseMoved(MouseEvent evt)
 	{
+		if(!isEnabled())
+		{
+			return;
+		}
+		
 		cursorPosition = new Point(evt.getX(), evt.getY());
 		
 		if(statusLabel != null)
@@ -775,6 +819,11 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 	 */
 	public void actionPerformed(ActionEvent evt)
 	{
+		if(!isEnabled())
+		{
+			return;
+		}
+		
 		// Powiększanie
 		if(evt.getActionCommand() == "zoomIn")
 		{

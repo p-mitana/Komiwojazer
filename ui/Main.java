@@ -67,8 +67,14 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 	/** Panel wyszukiwania miast */
 	CityPanel cityPanel;
 	
+	/** Panel wyszukiwania miast */
+	JScrollPane cityScroll;
+	
 	/** Etykieta zliczająca zaznaczonych obiektów */
 	JLabel selectedCountLabel;
+	
+	/** Przycisk czyszczenia zaznaczenia i cyklu */
+	JButton clearButton;
 	
 	/** Spinner rodziców początkowych */
 	JSpinner parentSpinner;
@@ -108,6 +114,9 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 	
 	/** Ilość pokoleń */
 	int generations = 100;
+	
+	/** Czy jest zablokowany? */
+	boolean locked = false;
 	
 	//  ========================= KONSTRUKTORY KLASY ========================
 	
@@ -155,9 +164,9 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 			// Prawy panel
 		searchField = new PlaceholderTextField();
 		cityPanel = new CityPanel(cities, selectedCities);
-		JScrollPane cityScroll = new JScrollPane(cityPanel);
+		cityScroll = new JScrollPane(cityPanel);
 		selectedCountLabel = new JLabel();
-		JButton clearButton = new JButton("Wyczyść zaznaczenie");
+		clearButton = new JButton("Wyczyść zaznaczenie");
 		
 		JLabel parentCountLabel = new JLabel("Liczba pierwszych osobników");
 		parentSpinner = new JSpinner(new SpinnerNumberModel(parentCount, 1, 1000000, 1));
@@ -381,6 +390,27 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 	//  ========================= METODY KLASY ========================
 	
 	/**
+	 * Blokuje lub odblokowuje interfejs
+	 * 
+	 * @param locked	Czy ma być zablokowany
+	 */
+	public void setLocked(boolean locked)
+	{
+		this.locked = locked;
+		map.setEnabled(!locked);
+		searchField.setEnabled(!locked);
+		cityPanel.setEnabled(!locked);
+		cityScroll.setEnabled(!locked);
+		clearButton.setEnabled(!locked);
+		parentSpinner.setEnabled(!locked);
+		parentLimitSpinner.setEnabled(!locked);
+		childLimitSpinner.setEnabled(!locked);
+		mutationFactorSpinner.setEnabled(!locked);
+		generationSpinner.setEnabled(!locked);
+		processButton.setEnabled(!locked);
+	}
+	
+	/**
 	 * Sprawdza, czy miasto jest zaznaczone
 	 * 
 	 * @param name	Nazwa miasta
@@ -450,7 +480,7 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 			cityPanel.find(searchField.getText());
 			cityPanel.repaint();
 			
-			if(selectedCities.size() > 2)
+			if(selectedCities.size() > 2 && !locked)
 			{
 				processButton.setEnabled(true);
 			}
@@ -500,7 +530,7 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 			cityPanel.find(searchField.getText());
 			cityPanel.repaint();
 			
-			if(selectedCities.size() <= 2)
+			if(selectedCities.size() <= 2 || locked)
 			{
 				processButton.setEnabled(false);
 			}
@@ -601,6 +631,8 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 	 */
 	public void process()
 	{
+		setLocked(true);
+		
 		model = new Model();
 		model.setModelProgessListener(this);
 		
@@ -735,7 +767,7 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 		
 		progressFrame.update((int) (progress*1000.0));
 		
-		// Narysuj cykl, jeżeli zakończono
+		// Narysuj cykl i odblokuj, jeżeli zakończono
 		if(progress == 1.0)
 		{
 			int[] best = model.getCurrentBest();
@@ -748,6 +780,8 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 		
 			paintCycle(result);
 			lengthLabel.setText(String.format("Długość cyklu: %.3f km", getCycleLength(result) / 1000.0));
+			
+			setLocked(false);
 		}
 	}
 	

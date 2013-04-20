@@ -164,6 +164,11 @@ public class CityPanel extends JComponent implements Scrollable, MouseListener
 	 */
 	public void mouseClicked(MouseEvent evt)
 	{
+		if(!isEnabled())
+		{
+			return;
+		}
+		
 		int index = evt.getY() / 24;
 		int yPos = evt.getY() % 24;
 		

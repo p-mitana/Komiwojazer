@@ -16,6 +16,78 @@ import java.util.*;
  */
 public class Ecosystem
 {
+	//  ========================= KLASY WEWNĘTRZNE =========================
+	
+	/**
+	 * Klasa umożliwia obliczenia wielowątkowe
+	 */
+	class ThreadProcessor extends Thread
+	{
+		/** Lista indeksów i */
+		ArrayList<Hamilton> list1;
+	
+		/** Lista indeksów j */
+		ArrayList<Hamilton> list2;
+		
+		/** Lista pozycji docelowych */
+		ArrayList<Integer> targetIndexList;
+		
+		/** Lista pozycji docelowych */
+		Hamilton[] targetList;
+		
+		/** Obiekt losujący */
+		Random random;
+		
+		/** Obiekt do obudzenia */
+		Object notifyObject;
+		
+		/**
+		 * Konstruktor klasy
+		 * 
+		 * @param notifyObject	Obiekt do obudzenia po zakończeniu działania
+		 */
+		public ThreadProcessor(Object notifyObject)
+		{
+			list1 = new ArrayList<Hamilton>();
+			list2 = new ArrayList<Hamilton>();
+			targetIndexList = new ArrayList<Integer>();
+			random = new Random();
+			this.notifyObject = notifyObject;
+		}
+		
+		/**
+		 * Metoda główna wątku
+		 */
+		public void run()
+		{
+			targetList = new Hamilton[targetIndexList.size()];
+			
+			for(int i = 0; i < targetIndexList.size(); i++)
+			{
+				try
+				{
+					Hamilton ham = Hamilton.crossing(list1.get(i), list2.get(i));
+					
+					// Mutacja
+					int x = random.nextInt(1000000);
+					if((double) x < (mutationFactor * 1000000))
+					{
+						ham.mutate();
+					}
+					
+					synchronized(this)
+					{
+						children[targetIndexList.get(i)] = ham;
+					}
+				}
+				catch(EvolutionException ex)
+				{
+					ex.printStackTrace();
+				}
+			}
+		}
+	}
+	
 	//  ========================= POLA KLASY =========================
 	
 	/** Graf pełny. */
@@ -29,6 +101,12 @@ public class Ecosystem
 	
 	/** Szansa zaistnienia mutacji */
 	double mutationFactor;
+	
+	/** Ilość wątków */
+	ThreadProcessor[] threads;
+	
+	/** Liczba wątków */
+	int threadCount = 4;
 	
 	//  ========================= KONSTRUKTORY KLASY =========================
 	
@@ -64,7 +142,8 @@ public class Ecosystem
 		this.parents = new Hamilton[parentCount];
 		this.children = new Hamilton[childCount];
 		this.mutationFactor = mutationFactor;
-				
+		
+		this.threads = new ThreadProcessor[threadCount];
 		// Wybranie najlepszych rodziców
 		sortArray(parents);
 		for(int i = 0; i < this.parents.length; i++)
@@ -87,6 +166,15 @@ public class Ecosystem
 		// Proces krzyżowania
 		int childrenCreated = 0;
 		
+		// Indeks wątku
+		int threadIndex = 0;
+		
+		// Stworzenie wątków
+		for(int i = 0; i < threads.length; i++)
+		{
+			threads[i] = new ThreadProcessor(this);
+		}
+
 		label:
 		for(int i = 0; i < parents.length; i++)
 		{
@@ -102,22 +190,43 @@ public class Ecosystem
 					break label;
 				}
 				
-				// Wygenerowanie potomka
-				children[childrenCreated] = Hamilton.crossing(parents[i], parents[j]);
+				// Ustalenie wątku
+				ThreadProcessor thread = threads[threadIndex];
+				threadIndex = (threadIndex == threads.length-1) ? 0 : threadIndex+1;
 				
-				// Mutacja
-				int x = random.nextInt(1000000);
-				if((double) x < (mutationFactor * 1000000))
-				{
-					children[childrenCreated].mutate();
-				}
+				// Zlecenie obliczeń wątkowi
+				thread.list1.add(new Hamilton(parents[i]));
+				thread.list2.add(new Hamilton(parents[j]));
+				thread.targetIndexList.add(childrenCreated);
 				
+				// Zwiększenie zmiennej i sprawdzenie kontynuacji
 				childrenCreated++;
 				
 				// Weryfikacja kontynuacji pętli
 				if(childrenCreated == children.length)
 				{
 					break label;
+				}
+			}
+		}
+		
+		// Uruchomienie wątków i odczekanie na ich wykonanie
+		for(int i = 0; i < threads.length; i++)
+		{
+			threads[i].start();
+		}
+		
+		// Przespanie czasu obliczeń tamtych wątków
+		synchronized(this)
+		{
+			boolean anyAlive = true;
+			
+			while(anyAlive)
+			{
+				anyAlive = false;
+				for(int i = 0; i < threads.length; i++)
+				{
+					anyAlive = anyAlive || threads[i].isAlive();
 				}
 			}
 		}
@@ -134,7 +243,6 @@ public class Ecosystem
 		{
 			children[i] = null;
 		}
-		
 	}
 	
 	/**

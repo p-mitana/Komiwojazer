@@ -1,6 +1,7 @@
 package alg;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Ta klasa reprezentuje ekosystem.
@@ -85,6 +86,8 @@ public class Ecosystem
 					ex.printStackTrace();
 				}
 			}
+			
+			latch.countDown();
 		}
 	}
 	
@@ -106,7 +109,10 @@ public class Ecosystem
 	ThreadProcessor[] threads;
 	
 	/** Liczba wątków */
-	int threadCount = 4;
+	int threadCount = 8;
+	
+	/** Bramka czekająca */
+	CountDownLatch latch;
 	
 	//  ========================= KONSTRUKTORY KLASY =========================
 	
@@ -150,6 +156,8 @@ public class Ecosystem
 		{
 			this.parents[i] = (i < parents.length) ? parents[i] : null;  // Operator ? : ochroni mnie przed błędem ArrayIndex...
 		}
+		
+		latch = new CountDownLatch(threads.length);
 	}
 	
 	//  ========================= METODY KLASY =========================
@@ -217,6 +225,16 @@ public class Ecosystem
 		}
 		
 		// Przespanie czasu obliczeń tamtych wątków
+		
+		try
+		{
+			latch.await();
+		}
+		catch(InterruptedException ex)
+		{
+			ex.printStackTrace();
+		}
+		
 		synchronized(this)
 		{
 			boolean anyAlive = true;

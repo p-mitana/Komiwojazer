@@ -25,22 +25,22 @@ public class Ecosystem
 	class ThreadProcessor extends Thread
 	{
 		/** Lista indeksów i */
-		ArrayList<Hamilton> list1;
+		private ArrayList<Hamilton> list1;
 	
 		/** Lista indeksów j */
-		ArrayList<Hamilton> list2;
+		private ArrayList<Hamilton> list2;
 		
 		/** Lista pozycji docelowych */
-		ArrayList<Integer> targetIndexList;
+		private ArrayList<Integer> targetIndexList;
 		
 		/** Lista pozycji docelowych */
-		Hamilton[] targetList;
+		private Hamilton[] targetList;
 		
 		/** Obiekt losujący */
-		Random random;
+		private Random random;
 		
 		/** Obiekt do obudzenia */
-		Object notifyObject;
+		private Object notifyObject;
 		
 		/**
 		 * Konstruktor klasy
@@ -94,25 +94,28 @@ public class Ecosystem
 	//  ========================= POLA KLASY =========================
 	
 	/** Graf pełny. */
-	FullGraph graph;
+	private FullGraph graph;
 	
 	/** Tablica rodziców */
-	Hamilton[] parents;
+	private Hamilton[] parents;
 	
 	/** Tablica dzieci */
-	Hamilton[] children;
+	private Hamilton[] children;
+	
+	/** Aktualnie najlepszy cykl */
+	private Hamilton currentBest;
 	
 	/** Szansa zaistnienia mutacji */
-	double mutationFactor;
+	private double mutationFactor;
 	
 	/** Ilość wątków */
-	ThreadProcessor[] threads;
+	private ThreadProcessor[] threads;
 	
 	/** Liczba wątków */
-	int threadCount = 8;
+	private int threadCount = 8;
 	
 	/** Bramka czekająca */
-	CountDownLatch latch;
+	private CountDownLatch latch;
 	
 	//  ========================= KONSTRUKTORY KLASY =========================
 	
@@ -147,6 +150,7 @@ public class Ecosystem
 		this.graph = graph;
 		this.parents = new Hamilton[parentCount];
 		this.children = new Hamilton[childCount];
+		this.currentBest = null;
 		this.mutationFactor = mutationFactor;
 		
 		this.threads = new ThreadProcessor[threadCount];
@@ -261,6 +265,16 @@ public class Ecosystem
 		{
 			children[i] = null;
 		}
+		
+		// Sprawdzenie, czy najlepszy jest lepszy od dotychczasowego rekordu
+		if(currentBest == null)
+		{
+			currentBest = parents[0];
+		}
+		else if(mark(parents[0]) > mark(currentBest))
+		{
+			currentBest = parents[0];
+		}
 	}
 	
 	/**
@@ -343,6 +357,16 @@ public class Ecosystem
 		}
 		
 		return res;
+	}
+	
+	/**
+	 * Zwraca najlepszego osobnika, jakiego dotąd znaleziono
+	 * 
+	 * @return Najlepszy osobnik
+	 */
+	public Hamilton getCurrentBest()
+	{
+		return currentBest;
 	}
 	
 	/**

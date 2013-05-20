@@ -286,7 +286,7 @@ public class Model extends AbstractModel
 	 */
 	public int[] getCurrentBest()
 	{
-		return getCurrentParents()[0];
+		return ecosystem.getCurrentBest().getFenotype();
 	}
 	
 	// ------ Metody kontrolujące symulację ------

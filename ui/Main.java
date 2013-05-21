@@ -760,12 +760,7 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 	 */
 	public void progressUpdate(double progress)
 	{
-		if((int) (progress*1000.0) == progressFrame.getProgress())
-		{
-			return;
-		}
-		
-		progressFrame.update((int) (progress*1000.0));
+		progressFrame.update(progress*1000);
 		
 		// Narysuj cykl i odblokuj, jeżeli zakończono
 		if(progress == 1.0)

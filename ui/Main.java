@@ -118,6 +118,9 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 	/** Czy jest zablokowany? */
 	boolean locked = false;
 	
+	/** Czasomierz do odrysowywania */
+	javax.swing.Timer repaintTimer;
+	
 	//  ========================= KONSTRUKTORY KLASY ========================
 	
 	/**
@@ -382,6 +385,10 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 		{
 			JOptionPane.showMessageDialog(this, "Błąd odczytu pliku.", "Błąd", JOptionPane.ERROR_MESSAGE);
 		}
+		
+		// -------- Timer do odrysowywania --------
+		repaintTimer = new javax.swing.Timer(100, null);
+		repaintTimer.setRepeats(false);
 		
 		// -------- Ustawienie parametrów okna i wyświetlenie --------
 		setVisible(true);
@@ -698,10 +705,6 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 		// Wykonanie symulacji
 		progressFrame.start();
 		model.simulate(generations);
-		
-		// Blokowanie i otwarcie okna postępu
-		//setLocked(true);
-		//launchProgressWindow();
 	}
 	
 	/**
@@ -762,23 +765,29 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 	{
 		progressFrame.update(progress*1000);
 		
-		try
+		// Narysuj cykl. Wykorzystaj timera, żeby nie rysować za często.
+		
+		if(!repaintTimer.isRunning())
 		{
-			// Narysuj cykl i odblokuj, jeżeli zakończono
 			int[] best = model.getCurrentBest();
 			String[] result = new String[best.length];
-	
+
 			for(int i = 0; i < best.length; i++)
 			{
 				result[i] = selectedCities.get(best[i]).name;
 			}
-	
+
 			paintCycle(result);
 			lengthLabel.setText(String.format("Długość cyklu: %.3f km", getCycleLength(result) / 1000.0));
+			
+			repaintTimer.start();
+		}
 		
+		// Odblokuj, jeśli zakończono
+		if(progress == 1.0)
+		{
 			setLocked(false);
 		}
-		catch(ConcurrentModificationException ex) {}
 	}
 	
 	/**

@@ -762,22 +762,23 @@ public class Main extends JFrame implements MapListener, ModelProgressListener, 
 	{
 		progressFrame.update(progress*1000);
 		
-		// Narysuj cykl i odblokuj, jeżeli zakończono
-		if(progress == 1.0)
+		try
 		{
+			// Narysuj cykl i odblokuj, jeżeli zakończono
 			int[] best = model.getCurrentBest();
 			String[] result = new String[best.length];
-		
+	
 			for(int i = 0; i < best.length; i++)
 			{
 				result[i] = selectedCities.get(best[i]).name;
 			}
-		
+	
 			paintCycle(result);
 			lengthLabel.setText(String.format("Długość cyklu: %.3f km", getCycleLength(result) / 1000.0));
-			
+		
 			setLocked(false);
 		}
+		catch(ConcurrentModificationException ex) {}
 	}
 	
 	/**

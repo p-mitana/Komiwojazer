@@ -250,14 +250,15 @@ public class MapComponent extends JComponent implements MouseMotionListener, Mou
 			{
 				paintObject(g, object, layer, metrics, topY, bottomY, leftX, rightX);
 			}
-			
-			// Powtórz rysowanie obiektu podświetlonego
+		}
+		
+		for(MapLayer layer : layers)  // Powtórz rysowanie obiektu podświetlonego
+		{
 			if(layer.getHighlightedObject() != null)
 			{
 				paintObject(g, layer.getHighlightedObject(), layer, metrics, topY, bottomY, leftX, rightX);
 			}
 		}
-		
 		if(windowMode)
 		{
 			Point p = mapToPixel(windowStart.x, windowStart.y);
